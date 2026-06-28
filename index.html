@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Symulator opóźniacza sygnału OLED</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="panel" aria-label="Symulator opóźniacza sygnału">
+      <section class="device">
+        <div class="screen-controls">
+          <div class="bezel">
+            <canvas id="oled" width="128" height="64" aria-label="Wyświetlacz OLED z siatką 128 na 64 pojedyncze piksele"></canvas>
+          </div>
+          <div class="keypad" aria-label="Klawiatura obok ekranu">
+            <button id="upBtn" type="button" class="key key-triangle key-up" aria-label="UP"><span></span></button>
+            <button id="downBtn" type="button" class="key key-triangle key-down" aria-label="DOWN"><span></span></button>
+            <button id="enterBtn" type="button" class="key key-enter" aria-label="ENTER"><span></span></button>
+          </div>
+        </div>
+        <p class="hint">ENTER krótko = wybór, ENTER przytrzymaj 3 s = menu. Klawiatura: ↑, Enter, ↓.</p>
+        <div class="scope-panel" aria-label="Oscyloskop wejścia i wyjścia">
+          <div class="scope-title">Oscyloskop IN/OUT</div>
+          <canvas id="scope" width="720" height="180" aria-label="Przebieg czasowy wejścia D11 i wyjścia D12"></canvas>
+        </div>
+      </section>
+
+      <aside class="io-panel">
+        <h1>Symulator OLED i przycisków</h1>
+        <p>Interaktywny model menu z pliku <code>opozniacz_sygnalu.ino</code>: tryb 1, tryb 2, ustawienia, obrót OLED, domyślny start i rozmiar bufora.</p>
+        <div class="status-grid">
+          <span>Wejście D11</span><strong id="inputState">LOW</strong>
+          <span>Wyjście D12</span><strong id="outputState">LOW</strong>
+          <span>Bufor</span><strong id="bufferState">0%</strong>
+          <span>Aktywne opóźnienie</span><strong id="activeDelay">000,00 ms</strong>
+        </div>
+        <button id="pulseBtn" type="button" class="secondary">Zasymuluj zbocze D11</button>
+        <button id="overflowBtn" type="button" class="secondary">Zapełnij bufor</button>
+        <button id="resetBtn" type="button" class="secondary">Reset symulatora</button>
+      </aside>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
