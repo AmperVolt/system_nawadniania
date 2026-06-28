@@ -1,0 +1,42 @@
+
+Temat projektu: Automatyczny system podlewania trawnika.
+Wymagania obowiązkowe:
+ Projekt musi być oparty na Arduino Mega 2560 – jest to warunek konieczny.
+ Program powinien być napisany w sposób czytelny i odpowiednio skomentowany.
+ Do projektu powinna zostać dołączona dokumentacja (schemat połączeń, lista
+elementów oraz krótki opis działania).
+Funkcjonalność:
+1. System ma działać na podstawie harmonogramu podlewania.
+2. Użytkownik powinien mieć możliwość ustawienia:
+o dnia podlewania,
+o godziny rozpoczęcia podlewania,
+o progu wilgotności gleby, przy którym podlewanie będzie uruchamiane.
+3. Podlewanie uruchamia się automatycznie zgodnie z harmonogramem.
+4. Podczas pracy systemu powinien znajdować się przycisk STOP, który umożliwi
+ręczne przerwanie aktualnie trwającego podlewania.
+Czujniki:
+ System powinien wykorzystywać czujnik wilgotności gleby. Proszę dobrać
+odpowiedni model (wiem, że najtańsze czujniki często sprawiają problemy, dlatego
+pozostawiam wybór osobie wykonującej projekt).
+ System powinien również kontrolować poziom wody w zbiorniku.
+Logika działania:
+ Podlewanie może rozpocząć się tylko wtedy, gdy poziom wody w zbiorniku wynosi
+co najmniej 20%.
+ Jeżeli podczas podlewania poziom wody spadnie do 5%, system powinien
+automatycznie wyłączyć pompę.
+ Wartości 20% i 5% są wpisane na stałe i nie muszą być edytowalne.
+ Edytowalne mają być jedynie:
+o dzień podlewania,
+o godzina podlewania,
+o próg wilgotności gleby.
+Wyświetlacz:
+ Chciałbym, aby projekt posiadał wyświetlacz LCD. Konkretny model pozostawiam
+do doboru wykonawcy (ważne, aby był odpowiedni do projektu i czytelnie
+prezentował informacje).
+Pompa:
+ Do sterowania podlewaniem można wykorzystać:
+o prawdziwą pompkę wody (jeżeli jest dostępna),
+o lub zasymulować jej działanie przy pomocy silnika DC.
+Jeżeli ma Pan pomysł na dodatkowe rozwiązania zwiększające funkcjonalność projektu (np.
+menu do konfiguracji na wyświetlaczu, sygnalizacja błędów lub komunikaty o niskim
+poziomie wody), proszę je zaproponować
