@@ -58,3 +58,5 @@ input { width: 100%; accent-color: #0ea5e9; }
 #wodaOpis { position: absolute; inset: 0; display: grid; place-items: center; font-family: "Courier New", monospace; font-size: 28px; font-weight: 900; text-shadow: 0 2px 8px #020617; }
 .pomoc { margin-top: 14px; color: var(--muted); font-size: 14px; line-height: 1.5; }
 .pomoc kbd { background: #111827; border: 1px solid #374151; border-bottom-width: 3px; border-radius: 6px; padding: 1px 6px; color: white; }
+.wartosc-suwaka { float: right; font-family: "Courier New", monospace; color: #7dd3fc; font-weight: 900; }
+.pomoc.mala { margin-top: -4px; margin-bottom: 16px; font-size: 13px; }

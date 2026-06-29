@@ -66,15 +66,35 @@ class LCD16x2 {
 
 const lcd = new LCD16x2('lcd');
 const wilgotnosc = document.getElementById('wilgotnosc');
-const zbiornik = document.getElementById('zbiornik');
+const sonda20 = document.getElementById('sonda20');
+const sonda5 = document.getElementById('sonda5');
 const wartosciAdc = { RIGHT: 0, UP: 144, DOWN: 329, LEFT: 504, SELECT: 741, NONE: 1023, 'STOP D2': 'D2' };
-const nazwyProgramow = ['AUTO', 'PODLEWANIE', 'DZIEN', 'GODZINA', 'PROG', 'BRAK WODY'];
+const dzienAktualny = document.getElementById('dzienAktualny');
+const godzinaAktualna = document.getElementById('godzinaAktualna');
+const minutaAktualna = document.getElementById('minutaAktualna');
+const nazwyProgramow = ['AUTO', 'PODLEWANIE', 'DZ. PODL.', 'GODZ. PODL.', 'PROG', 'BRAK WODY', 'DZ. AKT.', 'GODZ. AKT.', 'MIN. AKT.'];
 const stan = { program: 0, dzienPodlewania: 1, godzinaPodlewania: 6, progWilgotnosci: 45, dzien: 1, godzina: 6, minuta: 0, pompa: false, ostatniPrzycisk: 'NONE', stopDoMinuty: -1 };
+const PROGRAM_BRAK_WODY = 5;
+const PIERWSZY_EKRAN_KONFIG = 2;
+const OSTATNI_EKRAN_KONFIG = 8;
 
 function dwa(liczba) { return String(liczba).padStart(2, '0'); }
 function lcdLinia(tekst) { return String(tekst).padEnd(16, ' ').slice(0, 16); }
-function poziom20() { return Number(zbiornik.value) >= 20; }
-function poziom5() { return Number(zbiornik.value) >= 5; }
+function poziom20() { return sonda20.value === '1'; }
+function poziom5() { return sonda5.value === '1'; }
+function synchronizujCzasZSuwakow() {
+  stan.dzien = Number(dzienAktualny.value);
+  stan.godzina = Number(godzinaAktualna.value);
+  stan.minuta = Number(minutaAktualna.value);
+}
+function odswiezOpisySuwakow() {
+  document.getElementById('opisWilgotnosci').textContent = `${wilgotnosc.value}%`;
+  document.getElementById('opisSonda20').textContent = opisPlywaka(poziom20());
+  document.getElementById('opisSonda5').textContent = opisPlywaka(poziom5());
+  document.getElementById('opisDniaAktualnego').textContent = `D${dzienAktualny.value}`;
+  document.getElementById('opisGodzinyAktualnej').textContent = dwa(godzinaAktualna.value);
+  document.getElementById('opisMinutyAktualnej').textContent = dwa(minutaAktualna.value);
+}
 function opisPlywaka(stan) { return stan ? 'ZAŁ.' : 'ROZŁ.'; }
 
 function drukuj(wiersz0, wiersz1) {
@@ -85,13 +105,15 @@ function drukuj(wiersz0, wiersz1) {
 
 function wyswietlProgram() {
   const wilg = Number(wilgotnosc.value);
-  const woda = Number(zbiornik.value);
-  if (stan.program === 0) drukuj(`AUTO D${stan.dzienPodlewania} G${dwa(stan.godzinaPodlewania)}`, `W${wilg}% Z${woda}% P${stan.progWilgotnosci}`);
+  if (stan.program === 0) drukuj(`AUTO D${stan.dzienPodlewania} G${dwa(stan.godzinaPodlewania)}`, `W${wilg}% 20${opisPlywaka(poziom20()).slice(0, 1)} 5${opisPlywaka(poziom5()).slice(0, 1)}`);
   if (stan.program === 1) drukuj('Podlewanie', `STOP/LEFT W${wilg}%`);
   if (stan.program === 2) drukuj('Dzien podlew:', `D${stan.dzienPodlewania}  UP/DOWN`);
   if (stan.program === 3) drukuj('Godz podlew:', `${dwa(stan.godzinaPodlewania)}:00 UP/DOWN`);
   if (stan.program === 4) drukuj('Prog wilg:', `${stan.progWilgotnosci}%  UP/DOWN`);
   if (stan.program === 5) drukuj('Brak wody 20%', 'Uzupelnij zbior.');
+  if (stan.program === 6) drukuj('Aktualny dzien:', `D${stan.dzien}  UP/DOWN`);
+  if (stan.program === 7) drukuj('Aktualna godz:', `${dwa(stan.godzina)}:${dwa(stan.minuta)}`);
+  if (stan.program === 8) drukuj('Aktualna min:', `${dwa(stan.godzina)}:${dwa(stan.minuta)}`);
 }
 
 function aktualizujStatus() {
@@ -106,16 +128,16 @@ function aktualizujStatus() {
   document.querySelector('.plywak-20').classList.toggle('alarm', !poziom20());
   document.querySelector('.plywak-5').classList.toggle('alarm', !poziom5());
   document.getElementById('stanCzasu').textContent = `D${stan.dzien} ${dwa(stan.godzina)}:${dwa(stan.minuta)}`;
-  document.getElementById('woda').style.height = `${zbiornik.value}%`;
-  document.getElementById('wodaOpis').textContent = `${zbiornik.value}%`;
+  odswiezOpisySuwakow();
 }
 
 function logikaSterownika() {
+  synchronizujCzasZSuwakow();
   const wilg = Number(wilgotnosc.value);
   if (stan.program === 0) {
     stan.pompa = false;
     if (stan.stopDoMinuty !== stan.minuta && stan.dzien === stan.dzienPodlewania && stan.godzina === stan.godzinaPodlewania && stan.minuta === 0 && wilg < stan.progWilgotnosci) {
-      stan.program = poziom20() ? 1 : 5;
+      stan.program = poziom20() ? 1 : PROGRAM_BRAK_WODY;
     }
   }
   if (stan.program === 1) {
@@ -125,7 +147,7 @@ function logikaSterownika() {
       stan.program = 0;
     }
   }
-  if (stan.program === 5) {
+  if (stan.program === PROGRAM_BRAK_WODY) {
     stan.pompa = false;
     if (poziom20()) stan.program = 0;
   }
@@ -141,8 +163,11 @@ function wcisnijPrzycisk(przycisk) {
     btn.classList.add('aktywny');
     setTimeout(() => btn.classList.remove('aktywny'), 140);
   }
-  if (przycisk === 'RIGHT') { stan.program += 1; if (stan.program > 4) stan.program = 0; }
-  if (przycisk === 'SELECT') stan.program = 0;
+  if (przycisk === 'SELECT') { stan.program = stan.program === 0 ? PIERWSZY_EKRAN_KONFIG : 0; }
+  if (przycisk === 'RIGHT' && stan.program >= PIERWSZY_EKRAN_KONFIG && stan.program <= OSTATNI_EKRAN_KONFIG) {
+    stan.program += 1;
+    if (stan.program > OSTATNI_EKRAN_KONFIG) stan.program = PIERWSZY_EKRAN_KONFIG;
+  }
   if (przycisk === 'LEFT' && stan.program === 1) { stan.pompa = false; stan.program = 0; stan.stopDoMinuty = stan.minuta; }
   if (przycisk === 'UP' && stan.program === 2 && stan.dzienPodlewania < 7) stan.dzienPodlewania += 1;
   if (przycisk === 'DOWN' && stan.program === 2 && stan.dzienPodlewania > 1) stan.dzienPodlewania -= 1;
@@ -150,25 +175,23 @@ function wcisnijPrzycisk(przycisk) {
   if (przycisk === 'DOWN' && stan.program === 3 && stan.godzinaPodlewania > 0) stan.godzinaPodlewania -= 1;
   if (przycisk === 'UP' && stan.program === 4 && stan.progWilgotnosci < 90) stan.progWilgotnosci += 1;
   if (przycisk === 'DOWN' && stan.program === 4 && stan.progWilgotnosci > 10) stan.progWilgotnosci -= 1;
+  if (przycisk === 'UP' && stan.program === 6 && stan.dzien < 7) dzienAktualny.value = stan.dzien + 1;
+  if (przycisk === 'DOWN' && stan.program === 6 && stan.dzien > 1) dzienAktualny.value = stan.dzien - 1;
+  if (przycisk === 'UP' && stan.program === 7 && stan.godzina < 23) godzinaAktualna.value = stan.godzina + 1;
+  if (przycisk === 'DOWN' && stan.program === 7 && stan.godzina > 0) godzinaAktualna.value = stan.godzina - 1;
+  if (przycisk === 'UP' && stan.program === 8 && stan.minuta < 59) minutaAktualna.value = stan.minuta + 1;
+  if (przycisk === 'DOWN' && stan.program === 8 && stan.minuta > 0) minutaAktualna.value = stan.minuta - 1;
   logikaSterownika();
 }
 
 function resetSymulatora() {
   Object.assign(stan, { program: 0, dzienPodlewania: 1, godzinaPodlewania: 6, progWilgotnosci: 45, dzien: 1, godzina: 6, minuta: 0, pompa: false, ostatniPrzycisk: 'NONE', stopDoMinuty: -1 });
   wilgotnosc.value = 35;
-  zbiornik.value = 100;
-  logikaSterownika();
-}
-
-function zegar() {
-  stan.minuta += 1;
-  if (stan.minuta > 59) { stan.minuta = 0; stan.godzina += 1; }
-  if (stan.godzina > 23) { stan.godzina = 0; stan.dzien += 1; }
-  if (stan.dzien > 7) stan.dzien = 1;
-  if (stan.pompa) {
-    zbiornik.value = Math.max(0, Number(zbiornik.value) - 1);
-    wilgotnosc.value = Math.min(100, Number(wilgotnosc.value) + 2);
-  }
+  sonda20.value = 1;
+  sonda5.value = 1;
+  dzienAktualny.value = 1;
+  godzinaAktualna.value = 6;
+  minutaAktualna.value = 0;
   logikaSterownika();
 }
 
@@ -184,13 +207,11 @@ document.getElementById('stopAwaryjny').addEventListener('click', () => {
   setTimeout(() => stop.classList.remove('aktywny'), 160);
   logikaSterownika();
 });
-wilgotnosc.addEventListener('input', logikaSterownika);
-zbiornik.addEventListener('input', logikaSterownika);
+[wilgotnosc, sonda20, sonda5, dzienAktualny, godzinaAktualna, minutaAktualna].forEach(suwak => suwak.addEventListener('input', logikaSterownika));
 window.addEventListener('keydown', event => {
   const mapaKlawiszy = { ArrowUp: 'UP', ArrowDown: 'DOWN', ArrowLeft: 'LEFT', ArrowRight: 'RIGHT', Enter: 'SELECT' };
   if (event.key in mapaKlawiszy) { event.preventDefault(); wcisnijPrzycisk(mapaKlawiszy[event.key]); }
   if (event.key.toLowerCase() === 'r') resetSymulatora();
 });
 
-setInterval(zegar, 1000);
 resetSymulatora();
