@@ -40,3 +40,13 @@ o lub zasymulować jej działanie przy pomocy silnika DC.
 Jeżeli ma Pan pomysł na dodatkowe rozwiązania zwiększające funkcjonalność projektu (np.
 menu do konfiguracji na wyświetlaczu, sygnalizacja błędów lub komunikaty o niskim
 poziomie wody), proszę je zaproponować
+
+
+Pinout:
+przekaźnik A4 - dla pompy wody
+przycisk stop D2
+czujnik poziomu pływakowy 5% A1 (użyj jako cyfrowego)
+czujnik poziomu pływakowy 20% A3 (użyj jako cyfrowego)
+Czujnik wilgotności gleby M335 A4 (mierzy od 0 -3V)
+
+
