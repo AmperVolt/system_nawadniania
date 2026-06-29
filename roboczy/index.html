@@ -10,14 +10,14 @@
     <main class="panel" aria-label="Symulator automatycznego systemu podlewania trawnika">
       <section class="device">
         <div class="screen-controls">
-          <div class="bezel"><canvas id="lcd" width="320" height="90" aria-label="Wyświetlacz LCD 16 na 2 znaki"></canvas></div>
-          <div class="keypad" aria-label="Klawiatura LCD shield">
+          <div class="bezel"><canvas id="oled" width="128" height="64" aria-label="Wyświetlacz pikselowy OLED 128 na 64, jak w symulatorze Wokwi"></canvas></div>
+          <div class="keypad" aria-label="Klawiatura obok ekranu">
             <button id="upBtn" type="button" class="key key-triangle key-up" aria-label="UP"><span></span></button>
             <button id="rightBtn" type="button" class="key key-enter" aria-label="RIGHT"><span></span></button>
             <button id="downBtn" type="button" class="key key-triangle key-down" aria-label="DOWN"><span></span></button>
           </div>
         </div>
-        <p class="hint">RIGHT = menu: AUTO / dzień / godzina / próg. UP i DOWN zmieniają nastawy. SELECT w programie: przycisk „Powrót AUTO”.</p>
+        <p class="hint">RIGHT = menu: AUTO / dzień / godzina / próg. UP i DOWN zmieniają nastawy. Ekran jest rysowany piksel po pikselu jak w przykładzie i w Wokwi.</p>
         <div class="tank"><div id="water"></div><span id="waterLabel">100%</span></div>
       </section>
       <aside class="io-panel">
