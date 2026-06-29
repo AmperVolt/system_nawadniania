@@ -105,7 +105,7 @@ function drukuj(wiersz0, wiersz1) {
 function wyswietlProgram() {
   const wilg = Number(wilgotnosc.value);
   if (stan.program === 0) drukuj(`AUTO D${stan.dzienPodlewania} G${dwa(stan.godzinaPodlewania)}`, `W${wilg}% 20${opisPlywaka(poziom20()).slice(0, 1)} 5${opisPlywaka(poziom5()).slice(0, 1)}`);
-  if (stan.program === 1) drukuj('Podlewanie', `STOP/LEFT W${wilg}%`);
+  if (stan.program === 1) drukuj('Podlewanie', `STOP D2  W${wilg}%`);
   if (stan.program === 2) drukuj('Dzien podlew:', `D${stan.dzienPodlewania}  UP/DOWN`);
   if (stan.program === 3) drukuj('Godz podlew:', `${dwa(stan.godzinaPodlewania)}:00 UP/DOWN`);
   if (stan.program === 4) drukuj('Prog wilg:', `${stan.progWilgotnosci}%  UP/DOWN`);
@@ -169,7 +169,6 @@ function wcisnijPrzycisk(przycisk) {
     stan.program += 1;
     if (stan.program > OSTATNI_EKRAN_KONFIG) stan.program = PIERWSZY_EKRAN_KONFIG;
   }
-  if (przycisk === 'LEFT' && stan.program === 1) { stan.pompa = false; stan.program = 0; stan.stopDoMinuty = stan.minuta; }
   if (przycisk === 'UP' && stan.program === 2 && stan.dzienPodlewania < 7) stan.dzienPodlewania += 1;
   if (przycisk === 'DOWN' && stan.program === 2 && stan.dzienPodlewania > 1) stan.dzienPodlewania -= 1;
   if (przycisk === 'UP' && stan.program === 3 && stan.godzinaPodlewania < 23) stan.godzinaPodlewania += 1;
