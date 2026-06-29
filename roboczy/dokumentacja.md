@@ -24,6 +24,6 @@ W założeniach projektu pin A4 występuje jednocześnie dla przekaźnika i anal
 ## Opis działania
 Sterownik pracuje na podstawie harmonogramu: użytkownik ustawia dzień podlewania, godzinę rozpoczęcia oraz próg wilgotności gleby. Program sprawdza, czy aktualny dzień i godzina zgadzają się z nastawami, a wilgotność jest mniejsza od progu.
 
-Podlewanie rozpocznie się tylko wtedy, gdy czujnik poziomu 20% potwierdzi wystarczającą ilość wody. Jeżeli w trakcie pracy poziom wody spadnie poniżej 5%, wciśnięty zostanie STOP albo wilgotność wzrośnie powyżej progu z histerezą 5%, pompa zostanie wyłączona. Progi wody 20% i 5% są wpisane na stałe.
+Podlewanie rozpocznie się tylko wtedy, gdy czujnik poziomu 20% potwierdzi wystarczającą ilość wody. Jeżeli w trakcie pracy poziom wody spadnie poniżej 5%, wciśnięty zostanie STOP albo wilgotność wzrośnie powyżej progu z histerezą 5%, pompa zostanie wyłączona. Progi wody 20% i 5% są wpisane na stałe. W symulatorze jeden suwak poziomu wody służy wyłącznie do wizualnego ustawienia tych dwóch stanów cyfrowych; nie jest przeliczany na analogowy sygnał czujnika poziomu.
 
-Do symulacji dołączono pliki `index.html`, `styles.css` i `script.js`. Symulator pokazuje LCD Keypad Shield 16x2 z komórkami znaków, przyciskami RIGHT/UP/DOWN/LEFT/SELECT umieszczonymi wyłącznie na shieldzie, osobny czerwony przycisk STOP D2, czujniki pływakowe 20% i 5%, poziom wody, wilgotność gleby i stan pompy.
+Do symulacji dołączono pliki `index.html`, `styles.css` i `script.js`. Symulator pokazuje LCD Keypad Shield 16x2 z komórkami znaków, przyciskami RIGHT/UP/DOWN/LEFT/SELECT umieszczonymi wyłącznie na shieldzie, osobny czerwony przycisk STOP D2, jeden suwak poziomu wody, cyfrowe stany pływaków 20% i 5%, wilgotność gleby i stan pompy.

@@ -10,7 +10,7 @@
     <main class="calosc">
       <section class="naglowek">
         <h1>Symulator systemu nawadniania</h1>
-        <p>Arduino Mega 2560 + LCD Keypad Shield 16×2. Symulator nie przewija czasu automatycznie — wilgotność, stany pływaków oraz aktualny czas ustawiasz ręcznie.</p>
+        <p>Arduino Mega 2560 + LCD Keypad Shield 16×2. Symulator nie przewija czasu automatycznie — wilgotność, poziom wody oraz aktualny czas ustawiasz ręcznie.</p>
       </section>
 
       <section class="uklad">
@@ -50,9 +50,14 @@
 
           <h2>Czujniki i obiekt</h2>
           <label>Wilgotność gleby M335 <span id="opisWilgotnosci" class="wartosc-suwaka">35%</span><input id="wilgotnosc" type="range" min="0" max="100" value="35"></label>
-          <label>Pływak 20% / START <span id="opisSonda20" class="wartosc-suwaka">ZAŁ.</span><input id="sonda20" type="range" min="0" max="1" step="1" value="1"></label>
-          <label>Pływak 5% / STOP awaryjny <span id="opisSonda5" class="wartosc-suwaka">ZAŁ.</span><input id="sonda5" type="range" min="0" max="1" step="1" value="1"></label>
-          <div class="pomoc mala">Nie ma żadnego analogowego czujnika poziomu ani obliczania procentów wody. Te dwa suwaki ustawiają wyłącznie stany cyfrowych pływaków: ZAŁ. albo ROZŁ.</div>
+          <label>Poziom wody w zbiorniku <span id="opisPoziomuWody" class="wartosc-suwaka">35%</span><input id="poziomWody" type="range" min="0" max="100" value="35"></label>
+          <div class="zbiornik" aria-label="Wizualizacja poziomu wody i progów pływaków">
+            <div id="linia20"></div>
+            <div id="linia5"></div>
+            <div id="woda"></div>
+            <span id="wodaOpis">35%</span>
+          </div>
+          <div class="pomoc mala">Jeden suwak poziomu wody służy tylko do ustawienia stanów cyfrowych pływaków 20% i 5%. Symulator nie przelicza poziomu wody na żaden sygnał analogowy.</div>
 
           <h2>Czas ręczny</h2>
           <label>Aktualny dzień tygodnia <span id="opisDniaAktualnego" class="wartosc-suwaka">D1</span><input id="dzienAktualny" type="range" min="1" max="7" value="1"></label>
@@ -66,7 +71,7 @@
 
           <div class="pomoc">
             Klawiatura: <kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd>, <kbd>Enter</kbd> = SELECT, <kbd>R</kbd> = RESET.
-            SELECT otwiera konfigurację urządzenia i wraca do AUTO. W konfiguracji RIGHT przełącza nastawy, UP/DOWN zmienia wartość. Czerwony STOP symuluje fizyczny przycisk D2, a suwaki pływaków ustawiają tylko wejścia cyfrowe 20% i 5%.
+            SELECT otwiera konfigurację urządzenia i wraca do AUTO. W konfiguracji RIGHT przełącza nastawy, UP/DOWN zmienia wartość. Czerwony STOP symuluje fizyczny przycisk D2, a suwak poziomu wody ustawia tylko wejścia cyfrowe pływaków 20% i 5%.
           </div>
         </aside>
       </section>

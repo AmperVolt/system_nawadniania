@@ -66,8 +66,7 @@ class LCD16x2 {
 
 const lcd = new LCD16x2('lcd');
 const wilgotnosc = document.getElementById('wilgotnosc');
-const sonda20 = document.getElementById('sonda20');
-const sonda5 = document.getElementById('sonda5');
+const poziomWody = document.getElementById('poziomWody');
 const wartosciAdc = { RIGHT: 0, UP: 144, DOWN: 329, LEFT: 504, SELECT: 741, NONE: 1023, 'STOP D2': 'D2' };
 const dzienAktualny = document.getElementById('dzienAktualny');
 const godzinaAktualna = document.getElementById('godzinaAktualna');
@@ -80,8 +79,9 @@ const OSTATNI_EKRAN_KONFIG = 8;
 
 function dwa(liczba) { return String(liczba).padStart(2, '0'); }
 function lcdLinia(tekst) { return String(tekst).padEnd(16, ' ').slice(0, 16); }
-function poziom20() { return sonda20.value === '1'; }
-function poziom5() { return sonda5.value === '1'; }
+function aktualnyPoziomWody() { return Number(poziomWody.value); }
+function poziom20() { return aktualnyPoziomWody() >= 20; }
+function poziom5() { return aktualnyPoziomWody() >= 5; }
 function synchronizujCzasZSuwakow() {
   stan.dzien = Number(dzienAktualny.value);
   stan.godzina = Number(godzinaAktualna.value);
@@ -89,8 +89,7 @@ function synchronizujCzasZSuwakow() {
 }
 function odswiezOpisySuwakow() {
   document.getElementById('opisWilgotnosci').textContent = `${wilgotnosc.value}%`;
-  document.getElementById('opisSonda20').textContent = opisPlywaka(poziom20());
-  document.getElementById('opisSonda5').textContent = opisPlywaka(poziom5());
+  document.getElementById('opisPoziomuWody').textContent = `${poziomWody.value}%`;
   document.getElementById('opisDniaAktualnego').textContent = `D${dzienAktualny.value}`;
   document.getElementById('opisGodzinyAktualnej').textContent = dwa(godzinaAktualna.value);
   document.getElementById('opisMinutyAktualnej').textContent = dwa(minutaAktualna.value);
@@ -127,6 +126,8 @@ function aktualizujStatus() {
   document.getElementById('opisPlywak5').textContent = opisPlywaka(poziom5());
   document.querySelector('.plywak-20').classList.toggle('alarm', !poziom20());
   document.querySelector('.plywak-5').classList.toggle('alarm', !poziom5());
+  document.getElementById('woda').style.height = `${poziomWody.value}%`;
+  document.getElementById('wodaOpis').textContent = `${poziomWody.value}%`;
   document.getElementById('stanCzasu').textContent = `D${stan.dzien} ${dwa(stan.godzina)}:${dwa(stan.minuta)}`;
   odswiezOpisySuwakow();
 }
@@ -187,8 +188,7 @@ function wcisnijPrzycisk(przycisk) {
 function resetSymulatora() {
   Object.assign(stan, { program: 0, dzienPodlewania: 1, godzinaPodlewania: 6, progWilgotnosci: 45, dzien: 1, godzina: 6, minuta: 0, pompa: false, ostatniPrzycisk: 'NONE', stopDoMinuty: -1 });
   wilgotnosc.value = 35;
-  sonda20.value = 1;
-  sonda5.value = 1;
+  poziomWody.value = 35;
   dzienAktualny.value = 1;
   godzinaAktualna.value = 6;
   minutaAktualna.value = 0;
@@ -207,7 +207,7 @@ document.getElementById('stopAwaryjny').addEventListener('click', () => {
   setTimeout(() => stop.classList.remove('aktywny'), 160);
   logikaSterownika();
 });
-[wilgotnosc, sonda20, sonda5, dzienAktualny, godzinaAktualna, minutaAktualna].forEach(suwak => suwak.addEventListener('input', logikaSterownika));
+[wilgotnosc, poziomWody, dzienAktualny, godzinaAktualna, minutaAktualna].forEach(suwak => suwak.addEventListener('input', logikaSterownika));
 window.addEventListener('keydown', event => {
   const mapaKlawiszy = { ArrowUp: 'UP', ArrowDown: 'DOWN', ArrowLeft: 'LEFT', ArrowRight: 'RIGHT', Enter: 'SELECT' };
   if (event.key in mapaKlawiszy) { event.preventDefault(); wcisnijPrzycisk(mapaKlawiszy[event.key]); }
