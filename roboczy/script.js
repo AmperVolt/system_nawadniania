@@ -66,7 +66,8 @@ class LCD16x2 {
 
 const lcd = new LCD16x2('lcd');
 const wilgotnosc = document.getElementById('wilgotnosc');
-const zbiornik = document.getElementById('zbiornik');
+const sonda20 = document.getElementById('sonda20');
+const sonda5 = document.getElementById('sonda5');
 const wartosciAdc = { RIGHT: 0, UP: 144, DOWN: 329, LEFT: 504, SELECT: 741, NONE: 1023, 'STOP D2': 'D2' };
 const dzienAktualny = document.getElementById('dzienAktualny');
 const godzinaAktualna = document.getElementById('godzinaAktualna');
@@ -79,8 +80,8 @@ const OSTATNI_EKRAN_KONFIG = 8;
 
 function dwa(liczba) { return String(liczba).padStart(2, '0'); }
 function lcdLinia(tekst) { return String(tekst).padEnd(16, ' ').slice(0, 16); }
-function poziom20() { return Number(zbiornik.value) >= 20; }
-function poziom5() { return Number(zbiornik.value) >= 5; }
+function poziom20() { return sonda20.value === '1'; }
+function poziom5() { return sonda5.value === '1'; }
 function synchronizujCzasZSuwakow() {
   stan.dzien = Number(dzienAktualny.value);
   stan.godzina = Number(godzinaAktualna.value);
@@ -88,7 +89,8 @@ function synchronizujCzasZSuwakow() {
 }
 function odswiezOpisySuwakow() {
   document.getElementById('opisWilgotnosci').textContent = `${wilgotnosc.value}%`;
-  document.getElementById('opisZbiornika').textContent = `${zbiornik.value}%`;
+  document.getElementById('opisSonda20').textContent = opisPlywaka(poziom20());
+  document.getElementById('opisSonda5').textContent = opisPlywaka(poziom5());
   document.getElementById('opisDniaAktualnego').textContent = `D${dzienAktualny.value}`;
   document.getElementById('opisGodzinyAktualnej').textContent = dwa(godzinaAktualna.value);
   document.getElementById('opisMinutyAktualnej').textContent = dwa(minutaAktualna.value);
@@ -103,8 +105,7 @@ function drukuj(wiersz0, wiersz1) {
 
 function wyswietlProgram() {
   const wilg = Number(wilgotnosc.value);
-  const woda = Number(zbiornik.value);
-  if (stan.program === 0) drukuj(`AUTO D${stan.dzienPodlewania} G${dwa(stan.godzinaPodlewania)}`, `W${wilg}% Z${woda}% P${stan.progWilgotnosci}`);
+  if (stan.program === 0) drukuj(`AUTO D${stan.dzienPodlewania} G${dwa(stan.godzinaPodlewania)}`, `W${wilg}% 20${opisPlywaka(poziom20()).slice(0, 1)} 5${opisPlywaka(poziom5()).slice(0, 1)}`);
   if (stan.program === 1) drukuj('Podlewanie', `STOP/LEFT W${wilg}%`);
   if (stan.program === 2) drukuj('Dzien podlew:', `D${stan.dzienPodlewania}  UP/DOWN`);
   if (stan.program === 3) drukuj('Godz podlew:', `${dwa(stan.godzinaPodlewania)}:00 UP/DOWN`);
@@ -128,8 +129,6 @@ function aktualizujStatus() {
   document.querySelector('.plywak-5').classList.toggle('alarm', !poziom5());
   document.getElementById('stanCzasu').textContent = `D${stan.dzien} ${dwa(stan.godzina)}:${dwa(stan.minuta)}`;
   odswiezOpisySuwakow();
-  document.getElementById('woda').style.height = `${zbiornik.value}%`;
-  document.getElementById('wodaOpis').textContent = `${zbiornik.value}%`;
 }
 
 function logikaSterownika() {
@@ -188,7 +187,8 @@ function wcisnijPrzycisk(przycisk) {
 function resetSymulatora() {
   Object.assign(stan, { program: 0, dzienPodlewania: 1, godzinaPodlewania: 6, progWilgotnosci: 45, dzien: 1, godzina: 6, minuta: 0, pompa: false, ostatniPrzycisk: 'NONE', stopDoMinuty: -1 });
   wilgotnosc.value = 35;
-  zbiornik.value = 100;
+  sonda20.value = 1;
+  sonda5.value = 1;
   dzienAktualny.value = 1;
   godzinaAktualna.value = 6;
   minutaAktualna.value = 0;
@@ -207,7 +207,7 @@ document.getElementById('stopAwaryjny').addEventListener('click', () => {
   setTimeout(() => stop.classList.remove('aktywny'), 160);
   logikaSterownika();
 });
-[wilgotnosc, zbiornik, dzienAktualny, godzinaAktualna, minutaAktualna].forEach(suwak => suwak.addEventListener('input', logikaSterownika));
+[wilgotnosc, sonda20, sonda5, dzienAktualny, godzinaAktualna, minutaAktualna].forEach(suwak => suwak.addEventListener('input', logikaSterownika));
 window.addEventListener('keydown', event => {
   const mapaKlawiszy = { ArrowUp: 'UP', ArrowDown: 'DOWN', ArrowLeft: 'LEFT', ArrowRight: 'RIGHT', Enter: 'SELECT' };
   if (event.key in mapaKlawiszy) { event.preventDefault(); wcisnijPrzycisk(mapaKlawiszy[event.key]); }
