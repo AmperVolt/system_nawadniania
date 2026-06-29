@@ -23,7 +23,6 @@ int aktualny_dzien=1;              //symulowany aktualny dzień tygodnia (1-7)
 int aktualna_godzina=6;            //symulowana aktualna godzina (0-23)
 int aktualna_minuta=0;             //symulowana aktualna minuta (0-59)
 unsigned long czas_DS=millis();    //zmienna związana z eliminacją problemu drgań styku przycisków
-unsigned long czas_zegara=millis();//zmienna związana z pracą zegara symulowanego
 unsigned long czas_LCD=millis();   //zmienna związana z odświeżaniem wyświetlacza LCD
 //-----------
 int program=0;  //zmienna aktualnie realizowanego programu sterownika
@@ -34,6 +33,9 @@ int program=0;  //zmienna aktualnie realizowanego programu sterownika
 //3 - ustawianie godziny podlewania
 //4 - ustawianie progu wilgotności gleby
 //5 - alarm niskiego poziomu wody
+//6 - ustawianie aktualnego dnia tygodnia
+//7 - ustawianie aktualnej godziny
+//8 - ustawianie aktualnej minuty
 //-----------------------------------------------------------
 
 //----macierze definiujące znaki specjalne dla wyświetlacza LCD---------------
@@ -69,16 +71,6 @@ void setup(){
   }
 //koniec funkcji inicjalizującej arduino SETUP
 
-void zegar_symulowany(){
-  if(millis()-czas_zegara>1000){          //jedna sekunda symulacji oznacza jedną minutę zegara
-                             czas_zegara=millis();
-                             aktualna_minuta++;
-                             if(aktualna_minuta>59){aktualna_minuta=0;aktualna_godzina++;}
-                             if(aktualna_godzina>23){aktualna_godzina=0;aktualny_dzien++;}
-                             if(aktualny_dzien>7) aktualny_dzien=1;
-                            }
-}
-
 void pokaz_status(){
   if(millis()-czas_LCD>250){
     czas_LCD=millis();
@@ -91,7 +83,6 @@ void pokaz_status(){
 
 // początek pętli głównej programu
 void loop(){
-  zegar_symulowany();
   adc_wilgotnosc=analogRead(pin_wilgotnosc);                         //odczyt ADC z czujnika wilgotności gleby
   pomiar_wilgotnosci=map(adc_wilgotnosc,0,614,0,100);                //przeliczenie napięcia 0-3V na procenty wilgotności
   pomiar_wilgotnosci=constrain(pomiar_wilgotnosci,0,100);            //ograniczenie wyniku do zakresu 0-100%
@@ -114,25 +105,34 @@ void loop(){
   if(program==3){   lcd.setCursor(0,0);lcd.print("Godz podlew: ");if(godzina_podlewania<10) lcd.print("0");lcd.print(godzina_podlewania);lcd.print(" "); }
   if(program==4){   lcd.setCursor(0,0);lcd.print("Prog wilg: ");lcd.print(prog_wilgotnosci);lcd.write(byte(0));lcd.print("  "); }
   if(program==5){   digitalWrite(pin_przekaznik, LOW);lcd.setCursor(0,0);lcd.print("Brak wody 20% ");if(digitalRead(pin_poziom_20)==LOW){lcd.clear();program=0;} }
+  if(program==6){   lcd.setCursor(0,0);lcd.print("Aktualny dzien:");lcd.print(aktualny_dzien);lcd.print(" "); }
+  if(program==7){   lcd.setCursor(0,0);lcd.print("Aktualna godz:");if(aktualna_godzina<10) lcd.print("0");lcd.print(aktualna_godzina);lcd.print(" "); }
+  if(program==8){   lcd.setCursor(0,0);lcd.print("Aktualna min: ");if(aktualna_minuta<10) lcd.print("0");lcd.print(aktualna_minuta);lcd.print(" "); }
 //----------koniec obsługi programów sterownika-----------------
   pokaz_status();
 
 //------------obsługa przycisków z arduino LCD shield: -----------------------------------
     adc_0 = analogRead(0);                                              //odczyt ADC z wejścia przycisków A0
-    if (adc_0 < 50 && millis()-czas_DS>250)  {czas_DS=millis();lcd.clear();program++;if(program>4) program=0;} //RIGHT - następna pozycja menu
+    if (adc_0 < 50 && millis()-czas_DS>250)  {czas_DS=millis();lcd.clear();if(program>=2 && program<=8){program++;if(program>8) program=2;}} //RIGHT - następna pozycja konfiguracji
     if (adc_0 >= 50 && adc_0 < 250 && millis()-czas_DS>200)  {          //UP - zwiększanie nastaw
       czas_DS=millis();
       if(program==2 && dzien_podlewania<7) dzien_podlewania++;
       if(program==3 && godzina_podlewania<23) godzina_podlewania++;
       if(program==4 && prog_wilgotnosci<90) prog_wilgotnosci++;
+      if(program==6 && aktualny_dzien<7) aktualny_dzien++;
+      if(program==7 && aktualna_godzina<23) aktualna_godzina++;
+      if(program==8 && aktualna_minuta<59) aktualna_minuta++;
     }
     if (adc_0 >= 250 && adc_0 < 450 && millis()-czas_DS>200)  {         //DOWN - zmniejszanie nastaw
       czas_DS=millis();
       if(program==2 && dzien_podlewania>1) dzien_podlewania--;
       if(program==3 && godzina_podlewania>0) godzina_podlewania--;
       if(program==4 && prog_wilgotnosci>10) prog_wilgotnosci--;
+      if(program==6 && aktualny_dzien>1) aktualny_dzien--;
+      if(program==7 && aktualna_godzina>0) aktualna_godzina--;
+      if(program==8 && aktualna_minuta>0) aktualna_minuta--;
     }
-    if (adc_0 >= 650 && adc_0 < 850 && millis()-czas_DS>250)  {czas_DS=millis();lcd.clear();program=0;} //SELECT - powrót do AUTO
+    if (adc_0 >= 650 && adc_0 < 850 && millis()-czas_DS>250)  {czas_DS=millis();lcd.clear();if(program==0) program=2; else program=0;} //SELECT - wejście/wyjście z konfiguracji
 //-------------koniec obsługi przycisków z arduino LCD shield---------------------------------
 }
 //koniec pętli głównej programu

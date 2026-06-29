@@ -10,7 +10,7 @@
     <main class="calosc">
       <section class="naglowek">
         <h1>Symulator systemu nawadniania</h1>
-        <p>Arduino Mega 2560 + LCD Keypad Shield 16×2: RIGHT, UP, DOWN, LEFT, SELECT oraz RESET na shieldzie.</p>
+        <p>Arduino Mega 2560 + LCD Keypad Shield 16×2. Symulator nie przewija czasu automatycznie — wilgotność, poziom zbiornika oraz aktualny czas ustawiasz suwakami.</p>
       </section>
 
       <section class="uklad">
@@ -49,8 +49,14 @@
           </div>
 
           <h2>Czujniki i obiekt</h2>
-          <label>Wilgotność gleby M335 <input id="wilgotnosc" type="range" min="0" max="100" value="35"></label>
-          <label>Poziom wody w zbiorniku <input id="zbiornik" type="range" min="0" max="100" value="100"></label>
+          <label>Wilgotność gleby M335 <span id="opisWilgotnosci" class="wartosc-suwaka">35%</span><input id="wilgotnosc" type="range" min="0" max="100" value="35"></label>
+          <label>Poziom wody w zbiorniku <span id="opisZbiornika" class="wartosc-suwaka">100%</span><input id="zbiornik" type="range" min="0" max="100" value="100"></label>
+          <div class="pomoc mala">Poziom wody jest tylko suwakiem symulatora. Sterownik dalej używa dwóch czujników pływakowych: próg 20% do startu i próg 5% do awaryjnego stopu — nie ma analogowego czujnika poziomu.</div>
+
+          <h2>Czas ręczny</h2>
+          <label>Aktualny dzień tygodnia <span id="opisDniaAktualnego" class="wartosc-suwaka">D1</span><input id="dzienAktualny" type="range" min="1" max="7" value="1"></label>
+          <label>Aktualna godzina <span id="opisGodzinyAktualnej" class="wartosc-suwaka">06</span><input id="godzinaAktualna" type="range" min="0" max="23" value="6"></label>
+          <label>Aktualna minuta <span id="opisMinutyAktualnej" class="wartosc-suwaka">00</span><input id="minutaAktualna" type="range" min="0" max="59" value="0"></label>
           <div class="plywaki" aria-label="Czujniki pływakowe poziomu wody">
             <div class="plywak plywak-20"><span>pływak 20%</span><strong id="opisPlywak20">ZAŁ.</strong></div>
             <div class="plywak plywak-5"><span>pływak 5%</span><strong id="opisPlywak5">ZAŁ.</strong></div>
@@ -60,7 +66,7 @@
 
           <div class="pomoc">
             Klawiatura: <kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd>, <kbd>Enter</kbd> = SELECT, <kbd>R</kbd> = RESET.
-            RIGHT zmienia ekran nastaw, UP/DOWN zmienia wartość, SELECT wraca do AUTO. Czerwony STOP symuluje fizyczny przycisk D2, a pływaki 20% i 5% reagują na poziom zbiornika.
+            SELECT otwiera konfigurację urządzenia i wraca do AUTO. W konfiguracji RIGHT przełącza nastawy, UP/DOWN zmienia wartość. Czerwony STOP symuluje fizyczny przycisk D2, a pływaki 20% i 5% reagują progowo na suwak zbiornika.
           </div>
         </aside>
       </section>
