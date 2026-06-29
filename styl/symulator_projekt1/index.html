@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Symulator projekt1.ino</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="calosc">
+      <section class="naglowek">
+        <h1>Symulator programu <code>styl/projekt1.ino</code></h1>
+        <p>Napełnianie zbiornika, grzanie wody i spust z wyświetlaczem LCD 16×2 oraz przyciskami LCD shield.</p>
+      </section>
+
+      <section class="uklad">
+        <div class="shield" aria-label="Symulator LCD Keypad Shield">
+          <div class="sruby s1"></div><div class="sruby s2"></div><div class="sruby s3"></div><div class="sruby s4"></div>
+          <div class="lcd-rama">
+            <div id="lcd" class="lcd" aria-label="Wyświetlacz LCD 16 na 2"></div>
+            <div class="podpis-lcd">LCD 16×2: RS=8, EN=9, D4=4, D5=5, D6=6, D7=7</div>
+          </div>
+          <div class="przyciski" aria-label="Przyciski LCD shield">
+            <button class="btn btn-up" data-przycisk="UP" type="button">UP</button>
+            <button class="btn btn-left" data-przycisk="LEFT" type="button">LEFT</button>
+            <button class="btn btn-select" data-przycisk="SELECT" type="button">SELECT</button>
+            <button class="btn btn-right" data-przycisk="RIGHT" type="button">RIGHT</button>
+            <button class="btn btn-down" data-przycisk="DOWN" type="button">DOWN</button>
+          </div>
+          <button class="reset" id="reset" type="button">RESET</button>
+        </div>
+
+        <aside class="panel">
+          <h2>Stan układu</h2>
+          <div class="status">
+            <div class="linia-statusu"><span>Program</span><strong id="programOpis">0 - oczekiwanie</strong></div>
+            <div class="linia-statusu"><span>analogRead(A0)</span><strong id="adcOpis">1023</strong></div>
+            <div class="linia-statusu"><span>Pompa napełniająca D0</span><strong id="pompaNOpis">LOW</strong></div>
+            <div class="linia-statusu"><span>Grzanie D17</span><strong id="grzanieOpis">LOW</strong></div>
+            <div class="linia-statusu"><span>Pompa spustu D1</span><strong id="pompaSOpis">LOW</strong></div>
+            <div class="linia-statusu"><span>Czujnik MIN D15</span><strong id="minOpis">HIGH</strong></div>
+            <div class="linia-statusu"><span>Czujnik MAX D16</span><strong id="maxOpis">HIGH</strong></div>
+          </div>
+
+          <h2>Obiekt symulacji</h2>
+          <label>Poziom wody <input id="poziom" type="range" min="0" max="100" value="0"></label>
+          <label>Temperatura wody <input id="temperatura" type="range" min="0" max="99" value="20"></label>
+          <div class="zbiornik"><div id="liniaMin"></div><div id="liniaMax"></div><div id="woda"></div><span id="wodaOpis">0%</span></div>
+          <p class="pomoc">RIGHT uruchamia cykl jak przycisk START. UP/DOWN zmieniają nastawę temperatury. Suwaki pozwalają ręcznie zasymulować poziom i temperaturę.</p>
+        </aside>
+      </section>
+    </main>
+    <script src="script.js"></script>
+  </body>
+</html>

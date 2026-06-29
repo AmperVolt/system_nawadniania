@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Symulator systemu nawadniania / LCD Keypad Shield 16x2</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="calosc">
+      <section class="naglowek">
+        <h1>Symulator systemu nawadniania</h1>
+        <p>Arduino Mega 2560 + LCD Keypad Shield 16×2: RIGHT, UP, DOWN, LEFT, SELECT oraz RESET na shieldzie.</p>
+      </section>
+
+      <section class="uklad">
+        <div class="shield" aria-label="Symulator LCD Keypad Shield">
+          <div class="sruby s1"></div>
+          <div class="sruby s2"></div>
+          <div class="sruby s3"></div>
+          <div class="sruby s4"></div>
+
+          <div class="lcd-rama">
+            <div id="lcd" class="lcd" aria-label="Wyświetlacz LCD 16 na 2"></div>
+            <div class="podpis-lcd">wyświetlacz 16×2, indeksy: kolumna 0–15, wiersz 0–1</div>
+          </div>
+
+          <div class="przyciski" aria-label="Przyciski LCD Keypad Shield">
+            <button class="btn btn-up" data-przycisk="UP" type="button">UP</button>
+            <button class="btn btn-left" data-przycisk="LEFT" type="button">LEFT</button>
+            <button class="btn btn-select" data-przycisk="SELECT" type="button">SELECT</button>
+            <button class="btn btn-right" data-przycisk="RIGHT" type="button">RIGHT</button>
+            <button class="btn btn-down" data-przycisk="DOWN" type="button">DOWN</button>
+          </div>
+
+          <button class="reset" id="reset" type="button">RESET</button>
+        </div>
+
+        <aside class="panel">
+          <h2>Stan symulatora</h2>
+          <div class="status">
+            <div class="linia-statusu"><span>Ostatni przycisk</span><span id="stanPrzycisku" class="wartosc">NONE</span></div>
+            <div class="linia-statusu"><span>Symulowane analogRead(A0)</span><span id="stanAdc" class="wartosc">1023</span></div>
+            <div class="linia-statusu"><span>Program sterownika</span><span id="stanProgramu" class="wartosc">AUTO</span></div>
+            <div class="linia-statusu"><span>Pompa</span><span id="stanPompy" class="wartosc">OFF</span></div>
+            <div class="linia-statusu"><span>Czujnik pływakowy 20%</span><span id="stanPlywak20" class="wartosc">OK</span></div>
+            <div class="linia-statusu"><span>Czujnik pływakowy 5%</span><span id="stanPlywak5" class="wartosc">OK</span></div>
+            <div class="linia-statusu"><span>Czas</span><span id="stanCzasu" class="wartosc">D1 06:00</span></div>
+          </div>
+
+          <h2>Czujniki i obiekt</h2>
+          <label>Wilgotność gleby M335 <input id="wilgotnosc" type="range" min="0" max="100" value="35"></label>
+          <label>Poziom wody w zbiorniku <input id="zbiornik" type="range" min="0" max="100" value="100"></label>
+          <div class="plywaki" aria-label="Czujniki pływakowe poziomu wody">
+            <div class="plywak plywak-20"><span>pływak 20%</span><strong id="opisPlywak20">ZAŁ.</strong></div>
+            <div class="plywak plywak-5"><span>pływak 5%</span><strong id="opisPlywak5">ZAŁ.</strong></div>
+          </div>
+          <div class="zbiornik"><div id="linia20"></div><div id="linia5"></div><div id="woda"></div><span id="wodaOpis">100%</span></div>
+          <button class="stop-awaryjny" id="stopAwaryjny" type="button">STOP podlewania D2</button>
+
+          <div class="pomoc">
+            Klawiatura: <kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd>, <kbd>Enter</kbd> = SELECT, <kbd>R</kbd> = RESET.
+            RIGHT zmienia ekran nastaw, UP/DOWN zmienia wartość, SELECT wraca do AUTO. Czerwony STOP symuluje fizyczny przycisk D2, a pływaki 20% i 5% reagują na poziom zbiornika.
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <script src="script.js"></script>
+  </body>
+</html>
