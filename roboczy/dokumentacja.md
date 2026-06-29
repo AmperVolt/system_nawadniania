@@ -26,4 +26,4 @@ Sterownik pracuje na podstawie harmonogramu: użytkownik ustawia dzień podlewan
 
 Podlewanie rozpocznie się tylko wtedy, gdy czujnik poziomu 20% potwierdzi wystarczającą ilość wody. Jeżeli w trakcie pracy poziom wody spadnie poniżej 5%, wciśnięty zostanie STOP albo wilgotność wzrośnie powyżej progu z histerezą 5%, pompa zostanie wyłączona. Progi wody 20% i 5% są wpisane na stałe.
 
-Do symulacji dołączono pliki `index.html`, `styles.css` i `script.js`. Symulator pokazuje pikselowy ekran OLED 128x64 rysowany punkt po punkcie, klawiaturę, poziom wody, wilgotność gleby i stan pompy.
+Do symulacji dołączono pliki `index.html`, `styles.css` i `script.js`. Symulator pokazuje LCD Keypad Shield 16x2 z komórkami znaków, przyciskami RIGHT/UP/DOWN/LEFT/SELECT umieszczonymi wyłącznie na shieldzie, poziom wody, wilgotność gleby i stan pompy.

@@ -1,82 +1,179 @@
-const FONT = {
-  ' ': ['00000','00000','00000','00000','00000','00000','00000'], '?': ['01110','10001','00001','00010','00100','00000','00100'],
-  ':': ['00000','01100','01100','00000','01100','01100','00000'], '%': ['11001','11010','00100','01000','10110','00110','00000'],
-  '0': ['01110','10001','10011','10101','11001','10001','01110'], '1': ['00100','01100','00100','00100','00100','00100','01110'],
-  '2': ['01110','10001','00001','00010','00100','01000','11111'], '3': ['11110','00001','00001','01110','00001','00001','11110'],
-  '4': ['00010','00110','01010','10010','11111','00010','00010'], '5': ['11111','10000','11110','00001','00001','10001','01110'],
-  '6': ['00110','01000','10000','11110','10001','10001','01110'], '7': ['11111','00001','00010','00100','01000','01000','01000'],
-  '8': ['01110','10001','10001','01110','10001','10001','01110'], '9': ['01110','10001','10001','01111','00001','00010','01100'],
-  A: ['01110','10001','10001','11111','10001','10001','10001'], B: ['11110','10001','10001','11110','10001','10001','11110'],
-  C: ['01110','10001','10000','10000','10000','10001','01110'], D: ['11110','10001','10001','10001','10001','10001','11110'],
-  E: ['11111','10000','10000','11110','10000','10000','11111'], F: ['11111','10000','10000','11110','10000','10000','10000'],
-  G: ['01110','10001','10000','10111','10001','10001','01111'], H: ['10001','10001','10001','11111','10001','10001','10001'],
-  I: ['01110','00100','00100','00100','00100','00100','01110'], J: ['00111','00010','00010','00010','00010','10010','01100'],
-  K: ['10001','10010','10100','11000','10100','10010','10001'], L: ['10000','10000','10000','10000','10000','10000','11111'],
-  M: ['10001','11011','10101','10101','10001','10001','10001'], N: ['10001','11001','10101','10011','10001','10001','10001'],
-  O: ['01110','10001','10001','10001','10001','10001','01110'], P: ['11110','10001','10001','11110','10000','10000','10000'],
-  R: ['11110','10001','10001','11110','10100','10010','10001'], S: ['01111','10000','10000','01110','00001','00001','11110'],
-  T: ['11111','00100','00100','00100','00100','00100','00100'], U: ['10001','10001','10001','10001','10001','10001','01110'],
-  W: ['10001','10001','10001','10101','10101','10101','01010'], Y: ['10001','10001','01010','00100','00100','00100','00100'],
-  Z: ['11111','00001','00010','00100','01000','10000','11111']
-};
-
-class Oled128x64 {
-  constructor(canvasId) {
-    this.width = 128; this.height = 64; this.canvas = document.getElementById(canvasId); this.ctx = this.canvas.getContext('2d');
-    this.buffer = new Uint8Array(this.width * this.height); this.cursorX = 0; this.cursorY = 0; this.textSize = 1; this.ctx.imageSmoothingEnabled = false;
+/*
+  SYMULATOR LCD KEYPAD SHIELD DLA SYSTEMU NAWADNIANIA
+  LCD: RS=8, EN=9, D4=4, D5=5, D6=6, D7=7
+  Przyciski: A0 jako dzielnik napięcia
+*/
+class LCD16x2 {
+  constructor(idElementu) {
+    this.element = document.getElementById(idElementu);
+    this.kolumny = 16;
+    this.wiersze = 2;
+    this.kursorKolumna = 0;
+    this.kursorWiersz = 0;
+    this.bufor = [];
+    this.utworzKomorki();
+    this.clear();
   }
-  index(x, y) { return y * this.width + x; }
-  clearDisplay() { this.buffer.fill(0); }
-  setCursor(x, y) { this.cursorX = x; this.cursorY = y; }
-  setTextSize(size) { this.textSize = Math.max(1, Math.floor(size)); }
-  drawPixel(x, y, color = 1) { const xx = Math.round(x); const yy = Math.round(y); if (xx < 0 || xx >= this.width || yy < 0 || yy >= this.height) return; this.buffer[this.index(xx, yy)] = color ? 1 : 0; }
-  fillRect(x, y, w, h, color = 1) { for (let yy = y; yy < y + h; yy += 1) for (let xx = x; xx < x + w; xx += 1) this.drawPixel(xx, yy, color); }
-  drawLine(x0, y0, x1, y1, color = 1) { let x = Math.round(x0); let y = Math.round(y0); const ex = Math.round(x1); const ey = Math.round(y1); const dx = Math.abs(ex - x); const sx = x < ex ? 1 : -1; const dy = -Math.abs(ey - y); const sy = y < ey ? 1 : -1; let err = dx + dy; while (true) { this.drawPixel(x, y, color); if (x === ex && y === ey) break; const e2 = 2 * err; if (e2 >= dy) { err += dy; x += sx; } if (e2 <= dx) { err += dx; y += sy; } } }
-  drawRect(x, y, w, h, color = 1) { this.drawLine(x, y, x + w - 1, y, color); this.drawLine(x, y + h - 1, x + w - 1, y + h - 1, color); this.drawLine(x, y, x, y + h - 1, color); this.drawLine(x + w - 1, y, x + w - 1, y + h - 1, color); }
-  drawChar(x, y, char, color = 1) { const pattern = FONT[String(char).toUpperCase()] || FONT['?']; for (let row = 0; row < 7; row += 1) for (let col = 0; col < 5; col += 1) if (pattern[row][col] === '1') this.fillRect(x + col * this.textSize, y + row * this.textSize, this.textSize, this.textSize, color); }
-  printText(value, color = 1) { for (const char of String(value).toUpperCase()) { if (char === '\n') { this.cursorX = 0; this.cursorY += 8 * this.textSize; continue; } this.drawChar(this.cursorX, this.cursorY, char, color); this.cursorX += 6 * this.textSize; } }
-  display() { const image = this.ctx.createImageData(this.width, this.height); for (let y = 0; y < this.height; y += 1) for (let x = 0; x < this.width; x += 1) { const on = !!this.buffer[this.index(x, y)]; const offset = (y * this.width + x) * 4; image.data[offset] = on ? 142 : 0; image.data[offset + 1] = on ? 232 : 0; image.data[offset + 2] = on ? 255 : 0; image.data[offset + 3] = 255; } this.ctx.putImageData(image, 0, 0); }
+
+  utworzKomorki() {
+    this.element.innerHTML = '';
+    this.komorki = [];
+    for (let wiersz = 0; wiersz < this.wiersze; wiersz += 1) {
+      const linia = document.createElement('div');
+      linia.className = 'wiersz';
+      this.element.appendChild(linia);
+      this.komorki[wiersz] = [];
+      for (let kolumna = 0; kolumna < this.kolumny; kolumna += 1) {
+        const znak = document.createElement('div');
+        znak.className = 'znak';
+        znak.textContent = ' ';
+        linia.appendChild(znak);
+        this.komorki[wiersz][kolumna] = znak;
+      }
+    }
+  }
+
+  clear() {
+    this.bufor = Array.from({ length: this.wiersze }, () => Array(this.kolumny).fill(' '));
+    this.setCursor(0, 0);
+    this.odswiez();
+  }
+
+  setCursor(kolumna, wiersz) {
+    this.kursorKolumna = Math.max(0, Math.min(this.kolumny - 1, kolumna));
+    this.kursorWiersz = Math.max(0, Math.min(this.wiersze - 1, wiersz));
+  }
+
+  print(tekst) {
+    for (const znak of String(tekst)) {
+      if (this.kursorKolumna >= this.kolumny) break;
+      this.bufor[this.kursorWiersz][this.kursorKolumna] = znak;
+      this.kursorKolumna += 1;
+    }
+    this.odswiez();
+  }
+
+  write(znak) { this.print(String(znak).slice(0, 1)); }
+
+  odswiez() {
+    for (let wiersz = 0; wiersz < this.wiersze; wiersz += 1) {
+      for (let kolumna = 0; kolumna < this.kolumny; kolumna += 1) {
+        this.komorki[wiersz][kolumna].textContent = this.bufor[wiersz][kolumna];
+      }
+    }
+  }
 }
 
-const oled = new Oled128x64('oled');
-const soil = document.getElementById('soil');
-const tank = document.getElementById('tank');
-const state = { program: 0, daySet: 1, hourSet: 6, soilSet: 45, day: 1, hour: 6, minute: 0, pump: false };
+const lcd = new LCD16x2('lcd');
+const wilgotnosc = document.getElementById('wilgotnosc');
+const zbiornik = document.getElementById('zbiornik');
+const wartosciAdc = { RIGHT: 0, UP: 144, DOWN: 329, LEFT: 504, SELECT: 741, NONE: 1023 };
+const nazwyProgramow = ['AUTO', 'PODLEWANIE', 'DZIEN', 'GODZINA', 'PROG', 'BRAK WODY'];
+const stan = { program: 0, dzienPodlewania: 1, godzinaPodlewania: 6, progWilgotnosci: 45, dzien: 1, godzina: 6, minuta: 0, pompa: false, ostatniPrzycisk: 'NONE' };
 
-function two(v) { return String(v).padStart(2, '0'); }
-function water20() { return Number(tank.value) >= 20; }
-function water5() { return Number(tank.value) >= 5; }
-function write(x, y, value, size = 1, color = 1) { oled.setTextSize(size); oled.setCursor(x, y); oled.printText(value, color); }
-function bar(x, y, w, h, value) { oled.drawRect(x, y, w, h); oled.fillRect(x + 2, y + 2, Math.round((w - 4) * value / 100), h - 4); }
+function dwa(liczba) { return String(liczba).padStart(2, '0'); }
+function lcdLinia(tekst) { return String(tekst).padEnd(16, ' ').slice(0, 16); }
+function poziom20() { return Number(zbiornik.value) >= 20; }
+function poziom5() { return Number(zbiornik.value) >= 5; }
 
-function drawScreen(top, moist, level) {
-  oled.clearDisplay(); oled.drawRect(0, 0, 128, 64); write(4, 4, top); oled.drawLine(0, 14, 127, 14);
-  write(4, 20, `D${state.day} ${two(state.hour)}:${two(state.minute)} W${moist}%`);
-  write(4, 34, `ZB${level}% P${state.soilSet}%`); write(86, 48, state.pump ? 'POMPA' : 'STOP');
-  bar(4, 50, 72, 9, level); oled.display();
+function drukuj(wiersz0, wiersz1) {
+  lcd.clear();
+  lcd.setCursor(0, 0); lcd.print(lcdLinia(wiersz0));
+  lcd.setCursor(0, 1); lcd.print(lcdLinia(wiersz1));
 }
 
-function render() {
-  const moist = Number(soil.value); const level = Number(tank.value);
-  if (state.program === 0) { state.pump = false; if (state.day === state.daySet && state.hour === state.hourSet && state.minute === 0 && moist < state.soilSet) state.program = water20() ? 1 : 5; }
-  if (state.program === 1) { state.pump = true; if (!water5() || moist >= state.soilSet + 5) { state.pump = false; state.program = 0; } }
-  if (state.program === 5) state.pump = false;
-  let top = `AUTO D${state.daySet} G${two(state.hourSet)} P${state.soilSet}`;
-  if (state.program === 1) top = 'PODLEWANIE'; if (state.program === 2) top = `DZIEN ${state.daySet}`; if (state.program === 3) top = `GODZINA ${two(state.hourSet)}`; if (state.program === 4) top = `PROG ${state.soilSet}%`; if (state.program === 5) top = 'BRAK WODY 20%';
-  drawScreen(top, moist, level);
-  document.getElementById('pumpState').textContent = state.pump ? 'ON' : 'OFF'; document.getElementById('pumpState').style.color = state.pump ? '#56c271' : '#46b7ff';
-  document.getElementById('soilState').textContent = `${moist}%`; document.getElementById('tankState').textContent = `${level}%`; document.getElementById('timeState').textContent = `D${state.day} ${two(state.hour)}:${two(state.minute)}`;
-  document.getElementById('water').style.height = `${level}%`; document.getElementById('waterLabel').textContent = `${level}%`;
+function wyswietlProgram() {
+  const wilg = Number(wilgotnosc.value);
+  const woda = Number(zbiornik.value);
+  if (stan.program === 0) drukuj(`AUTO D${stan.dzienPodlewania} G${dwa(stan.godzinaPodlewania)}`, `W${wilg}% Z${woda}% P${stan.progWilgotnosci}`);
+  if (stan.program === 1) drukuj('Podlewanie', `STOP/LEFT W${wilg}%`);
+  if (stan.program === 2) drukuj('Dzien podlew:', `D${stan.dzienPodlewania}  UP/DOWN`);
+  if (stan.program === 3) drukuj('Godz podlew:', `${dwa(stan.godzinaPodlewania)}:00 UP/DOWN`);
+  if (stan.program === 4) drukuj('Prog wilg:', `${stan.progWilgotnosci}%  UP/DOWN`);
+  if (stan.program === 5) drukuj('Brak wody 20%', 'Uzupelnij zbior.');
 }
 
-function tickClock() { state.minute += 1; if (state.minute > 59) { state.minute = 0; state.hour += 1; } if (state.hour > 23) { state.hour = 0; state.day += 1; } if (state.day > 7) state.day = 1; if (state.pump) { tank.value = Math.max(0, Number(tank.value) - 1); soil.value = Math.min(100, Number(soil.value) + 2); } render(); }
-function press(button, action) { button.classList.add('pressed'); setTimeout(() => button.classList.remove('pressed'), 120); action(); render(); }
-document.getElementById('rightBtn').addEventListener('click', e => press(e.currentTarget, () => { state.program += 1; if (state.program > 4) state.program = 0; }));
-document.getElementById('upBtn').addEventListener('click', e => press(e.currentTarget, () => { if (state.program === 2 && state.daySet < 7) state.daySet += 1; if (state.program === 3 && state.hourSet < 23) state.hourSet += 1; if (state.program === 4 && state.soilSet < 90) state.soilSet += 1; }));
-document.getElementById('downBtn').addEventListener('click', e => press(e.currentTarget, () => { if (state.program === 2 && state.daySet > 1) state.daySet -= 1; if (state.program === 3 && state.hourSet > 0) state.hourSet -= 1; if (state.program === 4 && state.soilSet > 10) state.soilSet -= 1; }));
-document.getElementById('stopBtn').addEventListener('click', () => { state.pump = false; state.program = 0; render(); });
-document.getElementById('autoBtn').addEventListener('click', () => { state.program = 0; render(); });
-document.getElementById('resetBtn').addEventListener('click', () => { Object.assign(state, { program: 0, daySet: 1, hourSet: 6, soilSet: 45, day: 1, hour: 6, minute: 0, pump: false }); soil.value = 35; tank.value = 100; render(); });
-soil.addEventListener('input', render); tank.addEventListener('input', render);
-document.addEventListener('keydown', e => { if (e.key === 'ArrowRight' || e.key === 'Enter') document.getElementById('rightBtn').click(); if (e.key === 'ArrowUp') document.getElementById('upBtn').click(); if (e.key === 'ArrowDown') document.getElementById('downBtn').click(); if (e.key === 'Escape') document.getElementById('stopBtn').click(); });
-setInterval(tickClock, 1000); render();
+function aktualizujStatus() {
+  document.getElementById('stanPrzycisku').textContent = stan.ostatniPrzycisk;
+  document.getElementById('stanAdc').textContent = wartosciAdc[stan.ostatniPrzycisk];
+  document.getElementById('stanProgramu').textContent = nazwyProgramow[stan.program];
+  document.getElementById('stanPompy').textContent = stan.pompa ? 'ON' : 'OFF';
+  document.getElementById('stanCzasu').textContent = `D${stan.dzien} ${dwa(stan.godzina)}:${dwa(stan.minuta)}`;
+  document.getElementById('woda').style.height = `${zbiornik.value}%`;
+  document.getElementById('wodaOpis').textContent = `${zbiornik.value}%`;
+}
+
+function logikaSterownika() {
+  const wilg = Number(wilgotnosc.value);
+  if (stan.program === 0) {
+    stan.pompa = false;
+    if (stan.dzien === stan.dzienPodlewania && stan.godzina === stan.godzinaPodlewania && stan.minuta === 0 && wilg < stan.progWilgotnosci) {
+      stan.program = poziom20() ? 1 : 5;
+    }
+  }
+  if (stan.program === 1) {
+    stan.pompa = true;
+    if (!poziom5() || wilg >= stan.progWilgotnosci + 5) {
+      stan.pompa = false;
+      stan.program = 0;
+    }
+  }
+  if (stan.program === 5) {
+    stan.pompa = false;
+    if (poziom20()) stan.program = 0;
+  }
+  wyswietlProgram();
+  aktualizujStatus();
+}
+
+function wcisnijPrzycisk(przycisk) {
+  stan.ostatniPrzycisk = przycisk;
+  document.querySelectorAll('[data-przycisk]').forEach(btn => btn.classList.remove('aktywny'));
+  const btn = document.querySelector(`[data-przycisk="${przycisk}"]`);
+  if (btn) {
+    btn.classList.add('aktywny');
+    setTimeout(() => btn.classList.remove('aktywny'), 140);
+  }
+  if (przycisk === 'RIGHT') { stan.program += 1; if (stan.program > 4) stan.program = 0; }
+  if (przycisk === 'SELECT') stan.program = 0;
+  if (przycisk === 'LEFT' && stan.program === 1) { stan.pompa = false; stan.program = 0; }
+  if (przycisk === 'UP' && stan.program === 2 && stan.dzienPodlewania < 7) stan.dzienPodlewania += 1;
+  if (przycisk === 'DOWN' && stan.program === 2 && stan.dzienPodlewania > 1) stan.dzienPodlewania -= 1;
+  if (przycisk === 'UP' && stan.program === 3 && stan.godzinaPodlewania < 23) stan.godzinaPodlewania += 1;
+  if (przycisk === 'DOWN' && stan.program === 3 && stan.godzinaPodlewania > 0) stan.godzinaPodlewania -= 1;
+  if (przycisk === 'UP' && stan.program === 4 && stan.progWilgotnosci < 90) stan.progWilgotnosci += 1;
+  if (przycisk === 'DOWN' && stan.program === 4 && stan.progWilgotnosci > 10) stan.progWilgotnosci -= 1;
+  logikaSterownika();
+}
+
+function resetSymulatora() {
+  Object.assign(stan, { program: 0, dzienPodlewania: 1, godzinaPodlewania: 6, progWilgotnosci: 45, dzien: 1, godzina: 6, minuta: 0, pompa: false, ostatniPrzycisk: 'NONE' });
+  wilgotnosc.value = 35;
+  zbiornik.value = 100;
+  logikaSterownika();
+}
+
+function zegar() {
+  stan.minuta += 1;
+  if (stan.minuta > 59) { stan.minuta = 0; stan.godzina += 1; }
+  if (stan.godzina > 23) { stan.godzina = 0; stan.dzien += 1; }
+  if (stan.dzien > 7) stan.dzien = 1;
+  if (stan.pompa) {
+    zbiornik.value = Math.max(0, Number(zbiornik.value) - 1);
+    wilgotnosc.value = Math.min(100, Number(wilgotnosc.value) + 2);
+  }
+  logikaSterownika();
+}
+
+document.querySelectorAll('[data-przycisk]').forEach(btn => btn.addEventListener('click', () => wcisnijPrzycisk(btn.dataset.przycisk)));
+document.getElementById('reset').addEventListener('click', resetSymulatora);
+wilgotnosc.addEventListener('input', logikaSterownika);
+zbiornik.addEventListener('input', logikaSterownika);
+window.addEventListener('keydown', event => {
+  const mapaKlawiszy = { ArrowUp: 'UP', ArrowDown: 'DOWN', ArrowLeft: 'LEFT', ArrowRight: 'RIGHT', Enter: 'SELECT' };
+  if (event.key in mapaKlawiszy) { event.preventDefault(); wcisnijPrzycisk(mapaKlawiszy[event.key]); }
+  if (event.key.toLowerCase() === 'r') resetSymulatora();
+});
+
+setInterval(zegar, 1000);
+resetSymulatora();

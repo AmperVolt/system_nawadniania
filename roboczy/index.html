@@ -3,39 +3,62 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Symulator systemu nawadniania</title>
+    <title>Symulator systemu nawadniania / LCD Keypad Shield 16x2</title>
     <link rel="stylesheet" href="styles.css">
   </head>
   <body>
-    <main class="panel" aria-label="Symulator automatycznego systemu podlewania trawnika">
-      <section class="device">
-        <div class="screen-controls">
-          <div class="bezel"><canvas id="oled" width="128" height="64" aria-label="Wyświetlacz pikselowy OLED 128 na 64, jak w symulatorze Wokwi"></canvas></div>
-          <div class="keypad" aria-label="Klawiatura obok ekranu">
-            <button id="upBtn" type="button" class="key key-triangle key-up" aria-label="UP"><span></span></button>
-            <button id="rightBtn" type="button" class="key key-enter" aria-label="RIGHT"><span></span></button>
-            <button id="downBtn" type="button" class="key key-triangle key-down" aria-label="DOWN"><span></span></button>
-          </div>
-        </div>
-        <p class="hint">RIGHT = menu: AUTO / dzień / godzina / próg. UP i DOWN zmieniają nastawy. Ekran jest rysowany piksel po pikselu jak w przykładzie i w Wokwi.</p>
-        <div class="tank"><div id="water"></div><span id="waterLabel">100%</span></div>
+    <main class="calosc">
+      <section class="naglowek">
+        <h1>Symulator systemu nawadniania</h1>
+        <p>Arduino Mega 2560 + LCD Keypad Shield 16×2: RIGHT, UP, DOWN, LEFT, SELECT oraz RESET na shieldzie.</p>
       </section>
-      <aside class="io-panel">
-        <h1>Automatyczne podlewanie trawnika</h1>
-        <p>Symulacja programu dla Arduino Mega 2560: harmonogram, czujnik wilgotności M335, poziom wody 20%/5%, przekaźnik pompy i ręczny STOP.</p>
-        <div class="status-grid">
-          <span>Pompa</span><strong id="pumpState">OFF</strong>
-          <span>Wilgotność gleby</span><strong id="soilState">35%</strong>
-          <span>Poziom wody</span><strong id="tankState">100%</strong>
-          <span>Czas</span><strong id="timeState">D1 06:00</strong>
+
+      <section class="uklad">
+        <div class="shield" aria-label="Symulator LCD Keypad Shield">
+          <div class="sruby s1"></div>
+          <div class="sruby s2"></div>
+          <div class="sruby s3"></div>
+          <div class="sruby s4"></div>
+
+          <div class="lcd-rama">
+            <div id="lcd" class="lcd" aria-label="Wyświetlacz LCD 16 na 2"></div>
+            <div class="podpis-lcd">wyświetlacz 16×2, indeksy: kolumna 0–15, wiersz 0–1</div>
+          </div>
+
+          <div class="przyciski" aria-label="Przyciski LCD Keypad Shield">
+            <button class="btn btn-up" data-przycisk="UP" type="button">UP</button>
+            <button class="btn btn-left" data-przycisk="LEFT" type="button">LEFT</button>
+            <button class="btn btn-select" data-przycisk="SELECT" type="button">SELECT</button>
+            <button class="btn btn-right" data-przycisk="RIGHT" type="button">RIGHT</button>
+            <button class="btn btn-down" data-przycisk="DOWN" type="button">DOWN</button>
+          </div>
+
+          <button class="reset" id="reset" type="button">RESET</button>
         </div>
-        <label>Wilgotność gleby <input id="soil" type="range" min="0" max="100" value="35"></label>
-        <label>Poziom zbiornika <input id="tank" type="range" min="0" max="100" value="100"></label>
-        <button id="stopBtn" type="button" class="danger">STOP podlewania</button>
-        <button id="autoBtn" type="button" class="secondary">Powrót AUTO</button>
-        <button id="resetBtn" type="button" class="secondary">Reset symulatora</button>
-      </aside>
+
+        <aside class="panel">
+          <h2>Stan symulatora</h2>
+          <div class="status">
+            <div class="linia-statusu"><span>Ostatni przycisk</span><span id="stanPrzycisku" class="wartosc">NONE</span></div>
+            <div class="linia-statusu"><span>Symulowane analogRead(A0)</span><span id="stanAdc" class="wartosc">1023</span></div>
+            <div class="linia-statusu"><span>Program sterownika</span><span id="stanProgramu" class="wartosc">AUTO</span></div>
+            <div class="linia-statusu"><span>Pompa</span><span id="stanPompy" class="wartosc">OFF</span></div>
+            <div class="linia-statusu"><span>Czas</span><span id="stanCzasu" class="wartosc">D1 06:00</span></div>
+          </div>
+
+          <h2>Czujniki i obiekt</h2>
+          <label>Wilgotność gleby M335 <input id="wilgotnosc" type="range" min="0" max="100" value="35"></label>
+          <label>Poziom wody w zbiorniku <input id="zbiornik" type="range" min="0" max="100" value="100"></label>
+          <div class="zbiornik"><div id="woda"></div><span id="wodaOpis">100%</span></div>
+
+          <div class="pomoc">
+            Klawiatura: <kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd>, <kbd>Enter</kbd> = SELECT, <kbd>R</kbd> = RESET.
+            RIGHT zmienia ekran nastaw, UP/DOWN zmienia wartość, SELECT wraca do AUTO, LEFT działa jak STOP ręczny.
+          </div>
+        </aside>
+      </section>
     </main>
+
     <script src="script.js"></script>
   </body>
 </html>
