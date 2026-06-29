@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Symulator systemu nawadniania</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="panel" aria-label="Symulator automatycznego systemu podlewania trawnika">
+      <section class="device">
+        <div class="screen-controls">
+          <div class="bezel"><canvas id="lcd" width="320" height="90" aria-label="Wyświetlacz LCD 16 na 2 znaki"></canvas></div>
+          <div class="keypad" aria-label="Klawiatura LCD shield">
+            <button id="upBtn" type="button" class="key key-triangle key-up" aria-label="UP"><span></span></button>
+            <button id="rightBtn" type="button" class="key key-enter" aria-label="RIGHT"><span></span></button>
+            <button id="downBtn" type="button" class="key key-triangle key-down" aria-label="DOWN"><span></span></button>
+          </div>
+        </div>
+        <p class="hint">RIGHT = menu: AUTO / dzień / godzina / próg. UP i DOWN zmieniają nastawy. SELECT w programie: przycisk „Powrót AUTO”.</p>
+        <div class="tank"><div id="water"></div><span id="waterLabel">100%</span></div>
+      </section>
+      <aside class="io-panel">
+        <h1>Automatyczne podlewanie trawnika</h1>
+        <p>Symulacja programu dla Arduino Mega 2560: harmonogram, czujnik wilgotności M335, poziom wody 20%/5%, przekaźnik pompy i ręczny STOP.</p>
+        <div class="status-grid">
+          <span>Pompa</span><strong id="pumpState">OFF</strong>
+          <span>Wilgotność gleby</span><strong id="soilState">35%</strong>
+          <span>Poziom wody</span><strong id="tankState">100%</strong>
+          <span>Czas</span><strong id="timeState">D1 06:00</strong>
+        </div>
+        <label>Wilgotność gleby <input id="soil" type="range" min="0" max="100" value="35"></label>
+        <label>Poziom zbiornika <input id="tank" type="range" min="0" max="100" value="100"></label>
+        <button id="stopBtn" type="button" class="danger">STOP podlewania</button>
+        <button id="autoBtn" type="button" class="secondary">Powrót AUTO</button>
+        <button id="resetBtn" type="button" class="secondary">Reset symulatora</button>
+      </aside>
+    </main>
+    <script src="script.js"></script>
+  </body>
+</html>
