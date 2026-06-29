@@ -43,17 +43,24 @@
             <div class="linia-statusu"><span>Symulowane analogRead(A0)</span><span id="stanAdc" class="wartosc">1023</span></div>
             <div class="linia-statusu"><span>Program sterownika</span><span id="stanProgramu" class="wartosc">AUTO</span></div>
             <div class="linia-statusu"><span>Pompa</span><span id="stanPompy" class="wartosc">OFF</span></div>
+            <div class="linia-statusu"><span>Czujnik pływakowy 20%</span><span id="stanPlywak20" class="wartosc">OK</span></div>
+            <div class="linia-statusu"><span>Czujnik pływakowy 5%</span><span id="stanPlywak5" class="wartosc">OK</span></div>
             <div class="linia-statusu"><span>Czas</span><span id="stanCzasu" class="wartosc">D1 06:00</span></div>
           </div>
 
           <h2>Czujniki i obiekt</h2>
           <label>Wilgotność gleby M335 <input id="wilgotnosc" type="range" min="0" max="100" value="35"></label>
           <label>Poziom wody w zbiorniku <input id="zbiornik" type="range" min="0" max="100" value="100"></label>
-          <div class="zbiornik"><div id="woda"></div><span id="wodaOpis">100%</span></div>
+          <div class="plywaki" aria-label="Czujniki pływakowe poziomu wody">
+            <div class="plywak plywak-20"><span>pływak 20%</span><strong id="opisPlywak20">ZAŁ.</strong></div>
+            <div class="plywak plywak-5"><span>pływak 5%</span><strong id="opisPlywak5">ZAŁ.</strong></div>
+          </div>
+          <div class="zbiornik"><div id="linia20"></div><div id="linia5"></div><div id="woda"></div><span id="wodaOpis">100%</span></div>
+          <button class="stop-awaryjny" id="stopAwaryjny" type="button">STOP podlewania D2</button>
 
           <div class="pomoc">
             Klawiatura: <kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd>, <kbd>Enter</kbd> = SELECT, <kbd>R</kbd> = RESET.
-            RIGHT zmienia ekran nastaw, UP/DOWN zmienia wartość, SELECT wraca do AUTO, LEFT działa jak STOP ręczny.
+            RIGHT zmienia ekran nastaw, UP/DOWN zmienia wartość, SELECT wraca do AUTO. Czerwony STOP symuluje fizyczny przycisk D2, a pływaki 20% i 5% reagują na poziom zbiornika.
           </div>
         </aside>
       </section>

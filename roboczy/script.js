@@ -67,14 +67,15 @@ class LCD16x2 {
 const lcd = new LCD16x2('lcd');
 const wilgotnosc = document.getElementById('wilgotnosc');
 const zbiornik = document.getElementById('zbiornik');
-const wartosciAdc = { RIGHT: 0, UP: 144, DOWN: 329, LEFT: 504, SELECT: 741, NONE: 1023 };
+const wartosciAdc = { RIGHT: 0, UP: 144, DOWN: 329, LEFT: 504, SELECT: 741, NONE: 1023, 'STOP D2': 'D2' };
 const nazwyProgramow = ['AUTO', 'PODLEWANIE', 'DZIEN', 'GODZINA', 'PROG', 'BRAK WODY'];
-const stan = { program: 0, dzienPodlewania: 1, godzinaPodlewania: 6, progWilgotnosci: 45, dzien: 1, godzina: 6, minuta: 0, pompa: false, ostatniPrzycisk: 'NONE' };
+const stan = { program: 0, dzienPodlewania: 1, godzinaPodlewania: 6, progWilgotnosci: 45, dzien: 1, godzina: 6, minuta: 0, pompa: false, ostatniPrzycisk: 'NONE', stopDoMinuty: -1 };
 
 function dwa(liczba) { return String(liczba).padStart(2, '0'); }
 function lcdLinia(tekst) { return String(tekst).padEnd(16, ' ').slice(0, 16); }
 function poziom20() { return Number(zbiornik.value) >= 20; }
 function poziom5() { return Number(zbiornik.value) >= 5; }
+function opisPlywaka(stan) { return stan ? 'ZAŁ.' : 'ROZŁ.'; }
 
 function drukuj(wiersz0, wiersz1) {
   lcd.clear();
@@ -98,6 +99,12 @@ function aktualizujStatus() {
   document.getElementById('stanAdc').textContent = wartosciAdc[stan.ostatniPrzycisk];
   document.getElementById('stanProgramu').textContent = nazwyProgramow[stan.program];
   document.getElementById('stanPompy').textContent = stan.pompa ? 'ON' : 'OFF';
+  document.getElementById('stanPlywak20').textContent = opisPlywaka(poziom20());
+  document.getElementById('stanPlywak5').textContent = opisPlywaka(poziom5());
+  document.getElementById('opisPlywak20').textContent = opisPlywaka(poziom20());
+  document.getElementById('opisPlywak5').textContent = opisPlywaka(poziom5());
+  document.querySelector('.plywak-20').classList.toggle('alarm', !poziom20());
+  document.querySelector('.plywak-5').classList.toggle('alarm', !poziom5());
   document.getElementById('stanCzasu').textContent = `D${stan.dzien} ${dwa(stan.godzina)}:${dwa(stan.minuta)}`;
   document.getElementById('woda').style.height = `${zbiornik.value}%`;
   document.getElementById('wodaOpis').textContent = `${zbiornik.value}%`;
@@ -107,7 +114,7 @@ function logikaSterownika() {
   const wilg = Number(wilgotnosc.value);
   if (stan.program === 0) {
     stan.pompa = false;
-    if (stan.dzien === stan.dzienPodlewania && stan.godzina === stan.godzinaPodlewania && stan.minuta === 0 && wilg < stan.progWilgotnosci) {
+    if (stan.stopDoMinuty !== stan.minuta && stan.dzien === stan.dzienPodlewania && stan.godzina === stan.godzinaPodlewania && stan.minuta === 0 && wilg < stan.progWilgotnosci) {
       stan.program = poziom20() ? 1 : 5;
     }
   }
@@ -136,7 +143,7 @@ function wcisnijPrzycisk(przycisk) {
   }
   if (przycisk === 'RIGHT') { stan.program += 1; if (stan.program > 4) stan.program = 0; }
   if (przycisk === 'SELECT') stan.program = 0;
-  if (przycisk === 'LEFT' && stan.program === 1) { stan.pompa = false; stan.program = 0; }
+  if (przycisk === 'LEFT' && stan.program === 1) { stan.pompa = false; stan.program = 0; stan.stopDoMinuty = stan.minuta; }
   if (przycisk === 'UP' && stan.program === 2 && stan.dzienPodlewania < 7) stan.dzienPodlewania += 1;
   if (przycisk === 'DOWN' && stan.program === 2 && stan.dzienPodlewania > 1) stan.dzienPodlewania -= 1;
   if (przycisk === 'UP' && stan.program === 3 && stan.godzinaPodlewania < 23) stan.godzinaPodlewania += 1;
@@ -147,7 +154,7 @@ function wcisnijPrzycisk(przycisk) {
 }
 
 function resetSymulatora() {
-  Object.assign(stan, { program: 0, dzienPodlewania: 1, godzinaPodlewania: 6, progWilgotnosci: 45, dzien: 1, godzina: 6, minuta: 0, pompa: false, ostatniPrzycisk: 'NONE' });
+  Object.assign(stan, { program: 0, dzienPodlewania: 1, godzinaPodlewania: 6, progWilgotnosci: 45, dzien: 1, godzina: 6, minuta: 0, pompa: false, ostatniPrzycisk: 'NONE', stopDoMinuty: -1 });
   wilgotnosc.value = 35;
   zbiornik.value = 100;
   logikaSterownika();
@@ -167,6 +174,16 @@ function zegar() {
 
 document.querySelectorAll('[data-przycisk]').forEach(btn => btn.addEventListener('click', () => wcisnijPrzycisk(btn.dataset.przycisk)));
 document.getElementById('reset').addEventListener('click', resetSymulatora);
+document.getElementById('stopAwaryjny').addEventListener('click', () => {
+  stan.ostatniPrzycisk = 'STOP D2';
+  stan.pompa = false;
+  stan.program = 0;
+  stan.stopDoMinuty = stan.minuta;
+  const stop = document.getElementById('stopAwaryjny');
+  stop.classList.add('aktywny');
+  setTimeout(() => stop.classList.remove('aktywny'), 160);
+  logikaSterownika();
+});
 wilgotnosc.addEventListener('input', logikaSterownika);
 zbiornik.addEventListener('input', logikaSterownika);
 window.addEventListener('keydown', event => {
