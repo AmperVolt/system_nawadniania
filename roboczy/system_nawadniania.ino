@@ -1,4 +1,7 @@
+#include <Wire.h>
+#include <DS3231.h>
 #include <LiquidCrystal.h>            //dodanie do projektu biblioteki do obsługi wyświetlacza LCD
+DS3231 rtc;
 LiquidCrystal lcd(8, 9, 4, 5, 6, 7);  //zdefiniowanie numerów pinów wejściowych wyświetlacza LCD
 
 //--------poniżej stałe konfiguracyjne:----------------------
@@ -18,7 +21,7 @@ int adc_wilgotnosc=0;              //odczyt wartości z ADC związany z czujniki
 int pomiar_wilgotnosci=0;          //aktualna wilgotność gleby w procentach
 int prog_wilgotnosci=45;           //nastawa progu wilgotności gleby (%)
 int czas_podlewania_min=15;        //czas bieżącego podlewania w minutach
-int wybrany_ekran=1;               //1-7 dni tygodnia, 8 próg załączenia
+int wybrany_ekran=1;               //1-7 dni tygodnia, 8 próg załączenia, 9 dzień i czas RTC
 bool tryb_edycji=false;            //SELECT włącza/wyłącza edycję pola
 int edytowana_cyfra=-1;            //0..6 cyfry HHMMMMM
 int minuta_startu[8]={0,0,0,0,0,0,0,0};
@@ -96,7 +99,7 @@ void waliduj_ustawienia_dnia(int dzien){
 }
 
 void waliduj_prog_wilgotnosci(){
-  if(prog_wilgotnosci>100) prog_wilgotnosci=100;
+  if(prog_wilgotnosci>99) prog_wilgotnosci=99;
   if(prog_wilgotnosci<0) prog_wilgotnosci=0;
 }
 
@@ -116,14 +119,45 @@ void przesun_edytowana_cyfre(int kierunek){
 }
 
 void ustaw_cyfre_progu(int indeks, int zmiana){
-  int cyfry[3]={prog_wilgotnosci/100,(prog_wilgotnosci/10)%10,prog_wilgotnosci%10};
+  int cyfry[2]={(prog_wilgotnosci/10)%10,prog_wilgotnosci%10};
   cyfry[indeks]=kolejna_cyfra(cyfry[indeks],zmiana,9);
-  int prog=cyfry[0]*100+cyfry[1]*10+cyfry[2];
-  if(prog>100) prog=zmiana>0 ? 0 : 100;
+  int prog=cyfry[0]*10+cyfry[1];
+  if(prog>99) prog=zmiana>0 ? 0 : 99;
   prog_wilgotnosci=prog;
 }
 
 int kolumna_cyfry_progu(int indeks){return indeks;}
+
+void ustaw_cyfre_rtc(int indeks, int zmiana){
+  if(indeks==0){aktualny_dzien=zmiana>0 ? (aktualny_dzien>=7 ? 1 : aktualny_dzien+1) : (aktualny_dzien<=1 ? 7 : aktualny_dzien-1);}
+  if(indeks==1){aktualna_godzina=kolejna_cyfra(aktualna_godzina/10,zmiana,2)*10 + aktualna_godzina%10;}
+  if(indeks==2){aktualna_godzina=(aktualna_godzina/10)*10 + kolejna_cyfra(aktualna_godzina%10,zmiana,9);}
+  if(indeks==3){aktualna_minuta=kolejna_cyfra(aktualna_minuta/10,zmiana,5)*10 + aktualna_minuta%10;}
+  if(indeks==4){aktualna_minuta=(aktualna_minuta/10)*10 + kolejna_cyfra(aktualna_minuta%10,zmiana,9);}
+}
+
+void waliduj_czas_rtc(){
+  if(aktualna_godzina>23) aktualna_godzina=23;
+  if(aktualna_minuta>59) aktualna_minuta=59;
+}
+int grupa_cyfry_rtc(int indeks){
+  if(indeks==0) return 0;
+  if(indeks<=2) return 1;
+  return 2;
+}
+void przesun_edytowana_cyfre_rtc(int kierunek){
+  int poprzednia=edytowana_cyfra;
+  int nastepna=edytowana_cyfra+kierunek;
+  if(nastepna>4) nastepna=0;
+  if(nastepna<0) nastepna=4;
+  if(grupa_cyfry_rtc(poprzednia)!=grupa_cyfry_rtc(nastepna)) waliduj_czas_rtc();
+  edytowana_cyfra=nastepna;
+}
+
+int kolumna_cyfry_rtc(int indeks){
+  int kolumny[5]={0,5,6,8,9};
+  return kolumny[indeks];
+}
 
 //początek funkcji inicjalizującej arduino SETUP (wykonuje się tylko raz przy włączaniu arduino)
 void setup(){
@@ -193,7 +227,10 @@ void loop(){
                     if(tryb_edycji){lcd.setCursor(kolumna_cyfry(edytowana_cyfra),1);lcd.blink();}else lcd.noBlink();
                  }
   if(program==2 && wybrany_ekran==8){ lcd.setCursor(0,0);lcd.print("Prog zalacz.: ");
-                    lcd.setCursor(0,1);if(prog_wilgotnosci<100) lcd.print("0");if(prog_wilgotnosci<10) lcd.print("0");lcd.print(prog_wilgotnosci);lcd.write(byte(0));lcd.print(" wilg.");if(tryb_edycji){lcd.setCursor(kolumna_cyfry_progu(edytowana_cyfra),1);lcd.blink();}else lcd.noBlink();
+                    lcd.setCursor(0,1);if(prog_wilgotnosci<10) lcd.print("0");lcd.print(prog_wilgotnosci);lcd.write(byte(0));lcd.print(" wilg.");if(tryb_edycji){lcd.setCursor(kolumna_cyfry_progu(edytowana_cyfra),1);lcd.blink();}else lcd.noBlink();
+                 }
+  if(program==2 && wybrany_ekran==9){ lcd.setCursor(0,0);lcd.print("Czas RTC:       ");
+                    lcd.setCursor(0,1);drukuj_dzien_tygodnia(aktualny_dzien);lcd.print(" ");if(aktualna_godzina<10) lcd.print("0");lcd.print(aktualna_godzina);lcd.print(":");if(aktualna_minuta<10) lcd.print("0");lcd.print(aktualna_minuta);lcd.print("   ");if(tryb_edycji){lcd.setCursor(kolumna_cyfry_rtc(edytowana_cyfra),1);lcd.blink();}else lcd.noBlink();
                  }
   if(program==5){   lcd.setCursor(0,0);lcd.print("Prog wilg: ");lcd.print(prog_wilgotnosci);lcd.write(byte(0));lcd.print("  "); }
   if(program==6){   digitalWrite(pin_przekaznik_podlewania, LOW);lcd.setCursor(0,0);lcd.print("Napelnianie A2 ");
@@ -208,22 +245,24 @@ void loop(){
 
 //------------obsługa przycisków z arduino LCD shield: -----------------------------------
     adc_0 = analogRead(0);                                              //odczyt ADC z wejścia przycisków A0
-    if (adc_0 < 50 && millis()-czas_DS>250)  {czas_DS=millis();lcd.clear();if(program==2 && tryb_edycji && wybrany_ekran<=7){przesun_edytowana_cyfre(1);}else if(program==2 && tryb_edycji && wybrany_ekran==8){edytowana_cyfra++;if(edytowana_cyfra>2) edytowana_cyfra=0;}} //RIGHT - następna cyfra
-    if (adc_0 >= 450 && adc_0 < 650 && millis()-czas_DS>250)  {czas_DS=millis();lcd.clear();if(program==2 && tryb_edycji && wybrany_ekran<=7){przesun_edytowana_cyfre(-1);}else if(program==2 && tryb_edycji && wybrany_ekran==8){edytowana_cyfra--;if(edytowana_cyfra<0) edytowana_cyfra=2;}} //LEFT - poprzednia cyfra
+    if (adc_0 < 50 && millis()-czas_DS>250)  {czas_DS=millis();lcd.clear();if(program==2 && tryb_edycji && wybrany_ekran<=7){przesun_edytowana_cyfre(1);}else if(program==2 && tryb_edycji && wybrany_ekran==8){edytowana_cyfra++;if(edytowana_cyfra>1) edytowana_cyfra=0;}else if(program==2 && tryb_edycji && wybrany_ekran==9) przesun_edytowana_cyfre_rtc(1);} //RIGHT - następna cyfra
+    if (adc_0 >= 450 && adc_0 < 650 && millis()-czas_DS>250)  {czas_DS=millis();lcd.clear();if(program==2 && tryb_edycji && wybrany_ekran<=7){przesun_edytowana_cyfre(-1);}else if(program==2 && tryb_edycji && wybrany_ekran==8){edytowana_cyfra--;if(edytowana_cyfra<0) edytowana_cyfra=1;}else if(program==2 && tryb_edycji && wybrany_ekran==9) przesun_edytowana_cyfre_rtc(-1);} //LEFT - poprzednia cyfra
     if (adc_0 >= 50 && adc_0 < 250 && millis()-czas_DS>200)  {
       czas_DS=millis();
-      if(program==2 && !tryb_edycji){wybrany_ekran++;if(wybrany_ekran>8) wybrany_ekran=1;}
+      if(program==2 && !tryb_edycji){wybrany_ekran++;if(wybrany_ekran>9) wybrany_ekran=1;}
       else if(program==2 && tryb_edycji && wybrany_ekran<=7) ustaw_cyfre_harmonogramu(wybrany_ekran, edytowana_cyfra, 1);
       else if(program==2 && tryb_edycji && wybrany_ekran==8) ustaw_cyfre_progu(edytowana_cyfra,1);
+      else if(program==2 && tryb_edycji && wybrany_ekran==9) ustaw_cyfre_rtc(edytowana_cyfra,1);
       if(program==7 && aktualny_dzien<7) aktualny_dzien++;
       if(program==8 && aktualna_godzina<23) aktualna_godzina++;
       if(program==9 && aktualna_minuta<59) aktualna_minuta++;
     }
     if (adc_0 >= 250 && adc_0 < 450 && millis()-czas_DS>200)  {
       czas_DS=millis();
-      if(program==2 && !tryb_edycji){wybrany_ekran--;if(wybrany_ekran<1) wybrany_ekran=8;}
+      if(program==2 && !tryb_edycji){wybrany_ekran--;if(wybrany_ekran<1) wybrany_ekran=9;}
       else if(program==2 && tryb_edycji && wybrany_ekran<=7) ustaw_cyfre_harmonogramu(wybrany_ekran, edytowana_cyfra, -1);
       else if(program==2 && tryb_edycji && wybrany_ekran==8) ustaw_cyfre_progu(edytowana_cyfra,-1);
+      else if(program==2 && tryb_edycji && wybrany_ekran==9) ustaw_cyfre_rtc(edytowana_cyfra,-1);
       if(program==7 && aktualny_dzien>1) aktualny_dzien--;
       if(program==8 && aktualna_godzina>0) aktualna_godzina--;
       if(program==9 && aktualna_minuta>0) aktualna_minuta--;
@@ -232,7 +271,7 @@ void loop(){
       czas_DS=millis();lcd.clear();
       if(program!=2){program=2;wybrany_ekran=1;tryb_edycji=false;edytowana_cyfra=-1;}
       else if(!tryb_edycji){tryb_edycji=true;edytowana_cyfra=0;}
-      else{if(wybrany_ekran<=7) waliduj_ustawienia_dnia(wybrany_ekran); if(wybrany_ekran==8) waliduj_prog_wilgotnosci(); tryb_edycji=false;edytowana_cyfra=-1;}
+      else{if(wybrany_ekran<=7) waliduj_ustawienia_dnia(wybrany_ekran); if(wybrany_ekran==8) waliduj_prog_wilgotnosci(); if(wybrany_ekran==9) waliduj_czas_rtc(); tryb_edycji=false;edytowana_cyfra=-1;}
     } //SELECT - edycja / zatwierdzenie
 //-------------koniec obsługi przycisków z arduino LCD shield---------------------------------
 }
