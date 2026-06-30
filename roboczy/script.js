@@ -69,7 +69,7 @@ const wilgotnosc = document.getElementById('wilgotnosc');
 const poziomWody = document.getElementById('poziomWody');
 const czasPodlewania = document.getElementById('czasPodlewania');
 const wartosciAdc = { RIGHT: 0, UP: 144, DOWN: 329, LEFT: 504, SELECT: 741, NONE: 1023, 'STOP D2': 'D2' };
-const skrotyDni = ['', 'PN', 'WT', 'SR', 'CZW', 'PT', 'SB', 'ND'];
+const skrotyDni = ['', 'Pon.', 'Wt.', 'Śr.', 'Czw.', 'Pt.', 'Sob.', 'Nd.'];
 const dzienAktualny = document.getElementById('dzienAktualny');
 const godzinaAktualna = document.getElementById('godzinaAktualna');
 const minutaAktualna = document.getElementById('minutaAktualna');
@@ -127,9 +127,9 @@ function wyswietlProgram() {
   const wilg = Number(wilgotnosc.value);
   if (stan.program === 0) drukuj(`AUTO ${dzienSkrot(stan.dzienPodlewania)} G${dwa(stan.godzinaPodlewania)}`, `W${wilg}% T${stan.czasPodlewania}m`);
   if (stan.program === PROGRAM_PODLEWANIE) drukuj('Podlewanie', `${stan.minutyPodlewania}/${stan.czasPodlewania}m STOP D2`);
-  if (stan.program === 2) drukuj('Dzien podlew:', `${dzienSkrot(stan.dzienPodlewania)}  UP/DOWN`);
-  if (stan.program === 3) drukuj('Godz podlew:', `${dwa(stan.godzinaPodlewania)}:00 UP/DOWN`);
-  if (stan.program === 4) drukuj('Czas podlew:', `${stan.czasPodlewania} min UP/DOWN`);
+  if (stan.program === 2) drukuj(`Ustawienia: ${dzienSkrot(stan.dzienPodlewania)}`, `${dwa(stan.godzinaPodlewania)}:00 / ${stan.czasPodlewania}min`);
+  if (stan.program === 3) drukuj(`Start ${dzienSkrot(stan.dzienPodlewania)}`, `${dwa(stan.godzinaPodlewania)}:00  UP/DOWN`);
+  if (stan.program === 4) drukuj(`Czas ${dzienSkrot(stan.dzienPodlewania)}`, `${stan.czasPodlewania}min UP/DOWN`);
   if (stan.program === 5) drukuj('Prog wilg:', `${stan.progWilgotnosci}%  UP/DOWN`);
   if (stan.program === PROGRAM_NAPELNIANIE) drukuj('Napelnianie', czujnikPelny() ? 'Zbiornik pelny' : 'Przekaznik A2 ON');
   if (stan.program === 7) drukuj('Aktualny dzien:', `${dzienSkrot(stan.dzien)}  UP/DOWN`);
@@ -213,7 +213,11 @@ function wcisnijPrzycisk(przycisk) {
     btn.classList.add('aktywny');
     setTimeout(() => btn.classList.remove('aktywny'), 140);
   }
-  if (przycisk === 'SELECT') { stan.program = stan.program === 0 ? PIERWSZY_EKRAN_KONFIG : 0; }
+  if (przycisk === 'SELECT') {
+    if (stan.program === 0) stan.program = PIERWSZY_EKRAN_KONFIG;
+    else if (stan.program === 2 && stan.dzienPodlewania < 7) stan.dzienPodlewania += 1;
+    else stan.program = 0;
+  }
   if (przycisk === 'RIGHT' && stan.program >= PIERWSZY_EKRAN_KONFIG && stan.program <= OSTATNI_EKRAN_KONFIG) {
     stan.program += 1;
     if (stan.program > OSTATNI_EKRAN_KONFIG) stan.program = PIERWSZY_EKRAN_KONFIG;
@@ -222,7 +226,7 @@ function wcisnijPrzycisk(przycisk) {
   if (przycisk === 'DOWN' && stan.program === 2 && stan.dzienPodlewania > 1) stan.dzienPodlewania -= 1;
   if (przycisk === 'UP' && stan.program === 3 && stan.godzinaPodlewania < 23) stan.godzinaPodlewania += 1;
   if (przycisk === 'DOWN' && stan.program === 3 && stan.godzinaPodlewania > 0) stan.godzinaPodlewania -= 1;
-  if (przycisk === 'UP' && stan.program === 4 && stan.czasPodlewania < 60) czasPodlewania.value = stan.czasPodlewania + 1;
+  if (przycisk === 'UP' && stan.program === 4 && stan.czasPodlewania < 999) czasPodlewania.value = stan.czasPodlewania + 1;
   if (przycisk === 'DOWN' && stan.program === 4 && stan.czasPodlewania > 1) czasPodlewania.value = stan.czasPodlewania - 1;
   if (przycisk === 'UP' && stan.program === 5 && stan.progWilgotnosci < 90) stan.progWilgotnosci += 1;
   if (przycisk === 'DOWN' && stan.program === 5 && stan.progWilgotnosci > 10) stan.progWilgotnosci -= 1;
