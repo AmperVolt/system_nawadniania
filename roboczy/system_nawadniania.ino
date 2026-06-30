@@ -139,14 +139,30 @@ void ustaw_cyfre_progu(int indeks, int zmiana){
 
 int kolumna_cyfry_progu(int indeks){return indeks;}
 
+void skopiuj_rtc_do_ustawien_czasu(){
+  godzina_podlewania[0]=aktualna_godzina;
+  minuta_startu[0]=aktualna_minuta;
+  czas_podlewania_dnia[0]=1;
+}
+
+void skopiuj_ustawienia_czasu_do_rtc(){
+  aktualna_godzina=godzina_podlewania[0];
+  aktualna_minuta=minuta_startu[0];
+}
+
 void ustaw_cyfre_rtc(int indeks, int zmiana){
   if(indeks==0){aktualny_dzien=zmiana>0 ? (aktualny_dzien>=7 ? 1 : aktualny_dzien+1) : (aktualny_dzien<=1 ? 7 : aktualny_dzien-1);}
-  if(indeks>=1) ustaw_cyfre_czasu(aktualna_godzina, aktualna_minuta, indeks-1, zmiana);
+  if(indeks>=1){
+    skopiuj_rtc_do_ustawien_czasu();
+    ustaw_cyfre_harmonogramu(0, indeks-1, zmiana);
+    skopiuj_ustawienia_czasu_do_rtc();
+  }
 }
 
 void waliduj_czas_rtc(){
-  if(aktualna_godzina>23) aktualna_godzina=23;
-  if(aktualna_minuta>59) aktualna_minuta=59;
+  skopiuj_rtc_do_ustawien_czasu();
+  waliduj_ustawienia_dnia(0);
+  skopiuj_ustawienia_czasu_do_rtc();
 }
 int grupa_cyfry_rtc(int indeks){
   if(indeks==0) return 0;

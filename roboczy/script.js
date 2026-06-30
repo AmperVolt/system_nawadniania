@@ -173,19 +173,29 @@ function ustawCyfreProgu(indeks, zmiana) {
   stan.progWilgotnosci = prog;
 }
 function liniaCzasuRtc() { return `${dzienSkrot(stan.dzien).padEnd(4, ' ')} ${dwa(stan.godzina)}:${dwa(stan.minuta)}`; }
+function skopiujRtcDoUstawienCzasu() {
+  stan.godzinyPodlewania[0] = stan.godzina;
+  stan.minutyStartu[0] = stan.minuta;
+  stan.czasyPodlewania[0] = 1;
+}
+function skopiujUstawieniaCzasuDoRtc() {
+  stan.godzina = stan.godzinyPodlewania[0];
+  stan.minuta = stan.minutyStartu[0];
+  synchronizujSuwakiZCzasem();
+}
 function ustawCyfreRtc(indeks, zmiana) {
   if (indeks === 0) stan.dzien = zmiana > 0 ? (stan.dzien >= 7 ? 1 : stan.dzien + 1) : (stan.dzien <= 1 ? 7 : stan.dzien - 1);
   if (indeks >= 1) {
-    const czas = ustawCyfreCzasu(stan.godzina, stan.minuta, indeks - 1, zmiana);
-    stan.godzina = czas.godzina;
-    stan.minuta = czas.minuta;
+    skopiujRtcDoUstawienCzasu();
+    ustawCyfreUstawien(0, indeks - 1, zmiana);
+    skopiujUstawieniaCzasuDoRtc();
   }
   synchronizujSuwakiZCzasem();
 }
 function walidujCzasRtc() {
-  stan.godzina = Math.min(23, stan.godzina);
-  stan.minuta = Math.min(59, stan.minuta);
-  synchronizujSuwakiZCzasem();
+  skopiujRtcDoUstawienCzasu();
+  walidujUstawieniaDnia(0);
+  skopiujUstawieniaCzasuDoRtc();
 }
 function grupaCyfryRtc(indeks) {
   if (indeks === 0) return 'dzien';
