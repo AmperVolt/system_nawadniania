@@ -159,8 +159,27 @@ int kolumna_cyfry_rtc(int indeks){
   return kolumny[indeks];
 }
 
+void odczytaj_czas_rtc(){
+  bool h12=false;
+  bool pm=false;
+  int dzien=rtc.getDoW();
+  if(dzien>=1 && dzien<=7) aktualny_dzien=dzien;
+  aktualna_godzina=rtc.getHour(h12, pm);
+  aktualna_minuta=rtc.getMinute();
+  waliduj_czas_rtc();
+}
+
+void zapisz_czas_rtc(){
+  waliduj_czas_rtc();
+  rtc.setDoW(aktualny_dzien);
+  rtc.setHour(aktualna_godzina);
+  rtc.setMinute(aktualna_minuta);
+  rtc.setSecond(0);
+}
+
 //początek funkcji inicjalizującej arduino SETUP (wykonuje się tylko raz przy włączaniu arduino)
 void setup(){
+  Wire.begin();
   //--poniżej definicja wejść i wyjść (IO) do arduino------------------------------------
    pinMode(pin_przekaznik_podlewania, OUTPUT);    //wyjście odpowiedzialne za pompę podlewania trawnika
    pinMode(pin_przekaznik_napelniania, OUTPUT);   //wyjście odpowiedzialne za napełnianie zbiornika
@@ -185,6 +204,7 @@ void setup(){
 
   lcd.begin(16, 2);           //rozpoczęcie pracy wyświetlacza LCD
   lcd.clear();                //wymazanie wszystkich znaków z wyświetlacza LCD
+  odczytaj_czas_rtc();        //start z aktualnym czasem DS3231
   }
 //koniec funkcji inicjalizującej arduino SETUP
 
@@ -200,6 +220,7 @@ void pokaz_status(){
 
 // początek pętli głównej programu
 void loop(){
+  if(!(program==2 && wybrany_ekran==9 && tryb_edycji)) odczytaj_czas_rtc();
   adc_wilgotnosc=analogRead(pin_wilgotnosc);                         //odczyt ADC z czujnika wilgotności gleby
   pomiar_wilgotnosci=map(adc_wilgotnosc,0,614,0,100);                //przeliczenie napięcia 0-3V na procenty wilgotności
   pomiar_wilgotnosci=constrain(pomiar_wilgotnosci,0,100);            //ograniczenie wyniku do zakresu 0-100%
@@ -271,7 +292,7 @@ void loop(){
       czas_DS=millis();lcd.clear();
       if(program!=2){program=2;wybrany_ekran=1;tryb_edycji=false;edytowana_cyfra=-1;}
       else if(!tryb_edycji){tryb_edycji=true;edytowana_cyfra=0;}
-      else{if(wybrany_ekran<=7) waliduj_ustawienia_dnia(wybrany_ekran); if(wybrany_ekran==8) waliduj_prog_wilgotnosci(); if(wybrany_ekran==9) waliduj_czas_rtc(); tryb_edycji=false;edytowana_cyfra=-1;}
+      else{if(wybrany_ekran<=7) waliduj_ustawienia_dnia(wybrany_ekran); if(wybrany_ekran==8) waliduj_prog_wilgotnosci(); if(wybrany_ekran==9) zapisz_czas_rtc(); tryb_edycji=false;edytowana_cyfra=-1;}
     } //SELECT - edycja / zatwierdzenie
 //-------------koniec obsługi przycisków z arduino LCD shield---------------------------------
 }

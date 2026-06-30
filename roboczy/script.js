@@ -169,8 +169,13 @@ function ustawCyfreRtc(indeks, zmiana) {
   if (indeks === 2) stan.godzina = Math.floor(stan.godzina / 10) * 10 + kolejnaCyfra(stan.godzina % 10, zmiana, 9);
   if (indeks === 3) stan.minuta = kolejnaCyfra(Math.floor(stan.minuta / 10), zmiana, 5) * 10 + (stan.minuta % 10);
   if (indeks === 4) stan.minuta = Math.floor(stan.minuta / 10) * 10 + kolejnaCyfra(stan.minuta % 10, zmiana, 9);
+  synchronizujSuwakiZCzasem();
 }
-function walidujCzasRtc() { stan.godzina = Math.min(23, stan.godzina); stan.minuta = Math.min(59, stan.minuta); }
+function walidujCzasRtc() {
+  stan.godzina = Math.min(23, stan.godzina);
+  stan.minuta = Math.min(59, stan.minuta);
+  synchronizujSuwakiZCzasem();
+}
 function grupaCyfryRtc(indeks) {
   if (indeks === 0) return 'dzien';
   if (indeks <= 2) return 'godzina';
@@ -192,6 +197,11 @@ function synchronizujCzasZSuwakow() {
   stan.dzien = Number(dzienAktualny.value);
   stan.godzina = Number(godzinaAktualna.value);
   stan.minuta = Number(minutaAktualna.value);
+}
+function synchronizujSuwakiZCzasem() {
+  dzienAktualny.value = stan.dzien;
+  godzinaAktualna.value = stan.godzina;
+  minutaAktualna.value = stan.minuta;
 }
 function ustawPoziomWody(wartosc) { poziomWody.value = Math.max(0, Math.min(100, wartosc)); }
 function odswiezOpisySuwakow() {
