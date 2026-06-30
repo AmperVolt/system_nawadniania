@@ -68,7 +68,7 @@ void drukuj_prog_zalacz(){
 }
 
 void drukuj_napelnianie(){
-  lcd.print("Nape");lcd.write(byte(2));lcd.print("nianie A2 ");
+  lcd.print("Nape");lcd.write(byte(2));lcd.print("nianie");
 }
 
 void drukuj_aktualny_dzien(){
@@ -250,13 +250,26 @@ void setup(){
   }
 //koniec funkcji inicjalizującej arduino SETUP
 
+void wyczysc_linie(byte wiersz){
+  lcd.setCursor(0,wiersz);lcd.print("                ");
+}
+
+void drukuj_liczbe_4(int liczba){
+  if(liczba<1000) lcd.print("0");
+  if(liczba<100) lcd.print("0");
+  if(liczba<10) lcd.print("0");
+  lcd.print(liczba);
+}
+
 void pokaz_status(){
   if(millis()-czas_LCD>250){
     czas_LCD=millis();
-    lcd.setCursor(0,1);drukuj_dzien_tygodnia_stale(aktualny_dzien);lcd.print(" ");
+    wyczysc_linie(0);
+    lcd.setCursor(0,0);drukuj_dzien_tygodnia_stale(aktualny_dzien);
+    lcd.setCursor(5,0);
     if(aktualna_godzina<10) lcd.print("0");lcd.print(aktualna_godzina);lcd.print(":");
     if(aktualna_minuta<10) lcd.print("0");lcd.print(aktualna_minuta);
-    lcd.print(" W=");if(pomiar_wilgotnosci<10) lcd.print(" ");lcd.print(pomiar_wilgotnosci);lcd.write(byte(0));lcd.print(" ");
+    lcd.setCursor(pomiar_wilgotnosci>=100 ? 12 : 13,0);lcd.print(pomiar_wilgotnosci);lcd.write(byte(0));
   }
 }
 
@@ -270,13 +283,12 @@ void loop(){
 //----------poniżej obsługa programów sterownika---------------
   if(program==0){   digitalWrite(pin_przekaznik_podlewania, LOW);
                     digitalWrite(pin_przekaznik_napelniania, LOW);
-                    lcd.setCursor(0,0);lcd.print("AUTO ");drukuj_dzien_tygodnia(dzien_podlewania);lcd.print(" G");
-                    if(godzina_podlewania[aktualny_dzien]<10) lcd.print("0");lcd.print(godzina_podlewania[aktualny_dzien]);lcd.print(" T");lcd.print(czas_podlewania_dnia[aktualny_dzien]);lcd.print(" ");
+                    wyczysc_linie(1);
                     if(aktualna_godzina==godzina_podlewania[aktualny_dzien] && aktualna_minuta==minuta_startu[aktualny_dzien] && pomiar_wilgotnosci<prog_wilgotnosci && digitalRead(pin_poziom_pusty)==HIGH && (ostatni_start_dzien!=aktualny_dzien || ostatni_start_godzina!=aktualna_godzina || ostatni_start_minuta!=aktualna_minuta)){
                       lcd.clear();czas_podlewania_min=czas_podlewania_dnia[aktualny_dzien];czas_startu_podlewania=millis();ostatni_start_dzien=aktualny_dzien;ostatni_start_godzina=aktualna_godzina;ostatni_start_minuta=aktualna_minuta;program=1;
                     }
                  }
-  if(program==1){   lcd.setCursor(0,0);lcd.print("Podlewanie D2 ");
+  if(program==1){   wyczysc_linie(1);lcd.setCursor(0,1);lcd.print("Podlew ");drukuj_liczbe_4(min((millis()-czas_startu_podlewania)/60000UL,(unsigned long)czas_podlewania_min));lcd.print("/");drukuj_liczbe_4(czas_podlewania_min);
                     digitalWrite(pin_przekaznik_podlewania, HIGH);
                     digitalWrite(pin_przekaznik_napelniania, LOW);
                     if(digitalRead(pin_stop)==LOW){
@@ -302,7 +314,7 @@ void loop(){
                     lcd.setCursor(0,1);if(godzina_rtc_ekran<10) lcd.print("0");lcd.print(godzina_rtc_ekran);lcd.print(":");if(minuta_rtc_ekran<10) lcd.print("0");lcd.print(minuta_rtc_ekran);lcd.print(" / ");if(miganie_dnia) lcd.print("    "); else drukuj_dzien_tygodnia_stale(aktualny_dzien);lcd.print("   ");if(tryb_edycji && edytowana_cyfra<4){lcd.setCursor(kolumna_cyfry_rtc(edytowana_cyfra),1);lcd.blink();}else lcd.noBlink();
                   }
   if(program==5){   lcd.setCursor(0,0);lcd.print("Pr");lcd.write(byte(3));lcd.print("g wilg: ");lcd.print(prog_wilgotnosci);lcd.write(byte(0));lcd.print("  "); }
-  if(program==6){   digitalWrite(pin_przekaznik_podlewania, LOW);lcd.setCursor(0,0);drukuj_napelnianie();
+  if(program==6){   digitalWrite(pin_przekaznik_podlewania, LOW);wyczysc_linie(1);lcd.setCursor(0,1);drukuj_napelnianie();
                     if(digitalRead(pin_stop)==LOW){digitalWrite(pin_przekaznik_napelniania, LOW);lcd.clear();program=0;}
                     else if(digitalRead(pin_poziom_pelny)==HIGH){digitalWrite(pin_przekaznik_napelniania, HIGH);}
                     else{digitalWrite(pin_przekaznik_napelniania, LOW);lcd.clear();program=0;}
@@ -311,7 +323,7 @@ void loop(){
   if(program==8){   lcd.setCursor(0,0);lcd.print("Aktualna godz:");if(aktualna_godzina<10) lcd.print("0");lcd.print(aktualna_godzina);lcd.print(" "); }
   if(program==9){   lcd.setCursor(0,0);lcd.print("Aktualna min: ");if(aktualna_minuta<10) lcd.print("0");lcd.print(aktualna_minuta);lcd.print(" "); }
 //----------koniec obsługi programów sterownika-----------------
-  pokaz_status();
+  if(program==0 || program==1 || program==6) pokaz_status();
 
 //------------obsługa przycisków z arduino LCD shield: -----------------------------------
     adc_0 = analogRead(0);                                              //odczyt ADC z wejścia przycisków A0

@@ -250,14 +250,26 @@ function drukuj(wiersz0, wiersz1) {
   lcd.setCursor(0, 1); lcd.print(lcdLinia(wiersz1));
 }
 
+function liniaProcesuGorna() {
+  const znaki = Array(16).fill(' ');
+  const dzien = dzienSkrot(stan.dzien).padEnd(4, ' ').slice(0, 4);
+  const czas = `${dwa(stan.godzina)}:${dwa(stan.minuta)}`;
+  const wilg = `${wilgotnosc.value}%`;
+  [...dzien].forEach((znak, indeks) => { znaki[indeks] = znak; });
+  [...czas].forEach((znak, indeks) => { znaki[5 + indeks] = znak; });
+  [...wilg].forEach((znak, indeks) => { znaki[16 - wilg.length + indeks] = znak; });
+  return znaki.join('');
+}
+
+function liczba4(liczba) { return String(Math.max(0, Math.min(9999, liczba))).padStart(4, '0'); }
+
 function wyswietlProgram() {
-  const wilg = Number(wilgotnosc.value);
-  if (stan.program === 0) drukuj(`AUTO ${dzienSkrot(stan.dzien)} G${dwa(godzinaDnia(stan.dzien))}`, `W${wilg}% T${czasDnia(stan.dzien)}m`);
-  if (stan.program === PROGRAM_PODLEWANIE) drukuj('Podlewanie', `${stan.minutyPodlewania}/${stan.czasPodlewania}m STOP D2`);
+  if (stan.program === 0) drukuj(liniaProcesuGorna(), 'Oczekiwanie');
+  if (stan.program === PROGRAM_PODLEWANIE) drukuj(liniaProcesuGorna(), `Podlew ${liczba4(stan.minutyPodlewania)}/${liczba4(stan.czasPodlewania)}`);
   if (stan.program === 2 && stan.wybranyEkran <= 7) { drukuj(`Ustawienia: ${dzienSkrot(stan.wybranyEkran)}`, liniaUstawienDnia(stan.wybranyEkran)); podswietlEdytowanaCyfre(); }
   if (stan.program === 2 && stan.wybranyEkran === 8) { drukuj('Próg załącz.:', `${cyfryProgu()}% wilg.`); podswietlEdytowanaCyfre(); }
   if (stan.program === 2 && stan.wybranyEkran === 9) { drukuj('Czas RTC:', liniaCzasuRtc()); podswietlEdytowanaCyfre(); }
-  if (stan.program === PROGRAM_NAPELNIANIE) drukuj('Napełnianie', czujnikPelny() ? 'Zbiornik pełny' : 'Przekaźnik A2 ON');
+  if (stan.program === PROGRAM_NAPELNIANIE) drukuj(liniaProcesuGorna(), 'Napełnianie');
   if (stan.program === 7) drukuj('Aktualny dzień:', `${dzienSkrot(stan.dzien)}  UP/DOWN`);
   if (stan.program === 8) drukuj('Aktualna godz:', `${dwa(stan.godzina)}:${dwa(stan.minuta)}`);
   if (stan.program === 9) drukuj('Aktualna min:', `${dwa(stan.godzina)}:${dwa(stan.minuta)}`);
