@@ -65,3 +65,10 @@ input { width: 100%; accent-color: #0ea5e9; }
 .pomoc kbd { background: #111827; border: 1px solid #374151; border-bottom-width: 3px; border-radius: 6px; padding: 1px 6px; color: white; }
 .wartosc-suwaka { float: right; font-family: "Courier New", monospace; color: #7dd3fc; font-weight: 900; }
 .pomoc.mala { margin-top: -4px; margin-bottom: 16px; font-size: 13px; }
+
+.sterowanie-czasem { display: grid; grid-template-columns: 120px 1fr; gap: 12px; align-items: end; margin: 10px 0 14px; }
+.play-pauza { min-height: 42px; border: 0; border-radius: 14px; background: linear-gradient(180deg, #22c55e, #15803d); color: white; font-weight: 900; cursor: pointer; box-shadow: 0 5px 0 #052e16; }
+.play-pauza.aktywny { background: linear-gradient(180deg, #f59e0b, #b45309); box-shadow: 0 5px 0 #451a03; }
+.sterowanie-czasem label { margin: 0; }
+.sterowanie-czasem select { width: 100%; margin-top: 6px; border: 0; border-radius: 10px; padding: 9px; background: #020617; color: var(--tekst); font: inherit; font-weight: 800; }
+@media (max-width: 520px) { .sterowanie-czasem { grid-template-columns: 1fr; } }
