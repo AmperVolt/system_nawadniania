@@ -79,8 +79,7 @@ const poziomWody = document.getElementById('poziomWody');
 const wartosciAdc = { RIGHT: 0, UP: 144, DOWN: 329, LEFT: 504, SELECT: 741, NONE: 1023, 'STOP D2': 'D2' };
 const skrotyDni = ['', 'Pon.', 'Wt.', 'Śr.', 'Czw.', 'Pt.', 'Sob.', 'Nd.'];
 const dzienAktualny = document.getElementById('dzienAktualny');
-const godzinaAktualna = document.getElementById('godzinaAktualna');
-const minutaAktualna = document.getElementById('minutaAktualna');
+const aktualnyCzas = document.getElementById('aktualnyCzas');
 const nazwyProgramow = ['AUTO', 'PODLEWANIE', 'DZ. PODL.', 'GODZ. PODL.', 'CZAS PODL.', 'PRÓG', 'NAPEŁNIANIE', 'DZ. AKT.', 'GODZ. AKT.', 'MIN. AKT.'];
 const PROGRAM_PODLEWANIE = 1;
 const PROGRAM_NAPELNIANIE = 6;
@@ -111,6 +110,8 @@ const stan = {
 };
 
 function dwa(liczba) { return String(liczba).padStart(2, '0'); }
+function czasNaMinuty(godzina, minuta) { return godzina * 60 + minuta; }
+function tekstCzasuZMinut(minuty) { return `${dwa(Math.floor(minuty / 60))}:${dwa(minuty % 60)}`; }
 function dzienSkrot(dzien) { return skrotyDni[Number(dzien)] || `D${dzien}`; }
 function lcdLinia(tekst) { return String(tekst).padEnd(16, ' ').slice(0, 16); }
 function aktualnyPoziomWody() { return Number(poziomWody.value); }
@@ -118,7 +119,7 @@ function czujnikPelny() { return aktualnyPoziomWody() >= 100; }
 function czujnikPusty() { return aktualnyPoziomWody() <= 0; }
 function opisPlywaka(stanPlywaka) { return stanPlywaka ? 'ZAŁ.' : 'ROZŁ.'; }
 function kluczCzasu() { return `D${stan.dzien}-${stan.godzina}-${stan.minuta}`; }
-function aktualnyCzasWMinutach() { return (stan.dzien - 1) * 1440 + stan.godzina * 60 + stan.minuta; }
+function aktualnyCzasWMinutach() { return (stan.dzien - 1) * 1440 + czasNaMinuty(stan.godzina, stan.minuta); }
 function minutyOdStartuPodlewania() {
   if (stan.startPodlewaniaMinuty === null) return 0;
   const tydzien = 7 * 1440;
@@ -227,21 +228,20 @@ function podswietlEdytowanaCyfre() {
 }
 function synchronizujCzasZSuwakow() {
   stan.dzien = Number(dzienAktualny.value);
-  stan.godzina = Number(godzinaAktualna.value);
-  stan.minuta = Number(minutaAktualna.value);
+  const minutyDnia = Number(aktualnyCzas.value);
+  stan.godzina = Math.floor(minutyDnia / 60);
+  stan.minuta = minutyDnia % 60;
 }
 function synchronizujSuwakiZCzasem() {
   dzienAktualny.value = stan.dzien;
-  godzinaAktualna.value = stan.godzina;
-  minutaAktualna.value = stan.minuta;
+  aktualnyCzas.value = czasNaMinuty(stan.godzina, stan.minuta);
 }
 function ustawPoziomWody(wartosc) { poziomWody.value = Math.max(0, Math.min(100, wartosc)); }
 function odswiezOpisySuwakow() {
   document.getElementById('opisWilgotnosci').textContent = `${wilgotnosc.value}%`;
   document.getElementById('opisPoziomuWody').textContent = `${poziomWody.value}%`;
   document.getElementById('opisDniaAktualnego').textContent = dzienSkrot(dzienAktualny.value);
-  document.getElementById('opisGodzinyAktualnej').textContent = dwa(godzinaAktualna.value);
-  document.getElementById('opisMinutyAktualnej').textContent = dwa(minutaAktualna.value);
+  document.getElementById('opisAktualnegoCzasu').textContent = tekstCzasuZMinut(Number(aktualnyCzas.value));
 }
 
 function drukuj(wiersz0, wiersz1) {
@@ -385,10 +385,10 @@ function wcisnijPrzycisk(przycisk) {
   if (przycisk === 'DOWN' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran === 9) ustawCyfreRtc(stan.edytowanaCyfra, -1);
   if (przycisk === 'UP' && stan.program === 7 && stan.dzien < 7) dzienAktualny.value = stan.dzien + 1;
   if (przycisk === 'DOWN' && stan.program === 7 && stan.dzien > 1) dzienAktualny.value = stan.dzien - 1;
-  if (przycisk === 'UP' && stan.program === 8 && stan.godzina < 23) godzinaAktualna.value = stan.godzina + 1;
-  if (przycisk === 'DOWN' && stan.program === 8 && stan.godzina > 0) godzinaAktualna.value = stan.godzina - 1;
-  if (przycisk === 'UP' && stan.program === 9 && stan.minuta < 59) minutaAktualna.value = stan.minuta + 1;
-  if (przycisk === 'DOWN' && stan.program === 9 && stan.minuta > 0) minutaAktualna.value = stan.minuta - 1;
+  if (przycisk === 'UP' && stan.program === 8 && stan.godzina < 23) aktualnyCzas.value = czasNaMinuty(stan.godzina + 1, stan.minuta);
+  if (przycisk === 'DOWN' && stan.program === 8 && stan.godzina > 0) aktualnyCzas.value = czasNaMinuty(stan.godzina - 1, stan.minuta);
+  if (przycisk === 'UP' && stan.program === 9 && stan.minuta < 59) aktualnyCzas.value = czasNaMinuty(stan.godzina, stan.minuta + 1);
+  if (przycisk === 'DOWN' && stan.program === 9 && stan.minuta > 0) aktualnyCzas.value = czasNaMinuty(stan.godzina, stan.minuta - 1);
   logikaSterownika();
 }
 
@@ -397,8 +397,7 @@ function resetSymulatora() {
   wilgotnosc.value = 35;
   poziomWody.value = 35;
   dzienAktualny.value = 1;
-  godzinaAktualna.value = 6;
-  minutaAktualna.value = 0;
+  aktualnyCzas.value = 360;
   logikaSterownika();
 }
 
@@ -412,7 +411,7 @@ document.getElementById('stopAwaryjny').addEventListener('click', () => {
   setTimeout(() => stop.classList.remove('aktywny'), 160);
   logikaSterownika();
 });
-[wilgotnosc, poziomWody, dzienAktualny, godzinaAktualna, minutaAktualna].forEach(suwak => suwak.addEventListener('input', logikaSterownika));
+[wilgotnosc, poziomWody, dzienAktualny, aktualnyCzas].forEach(suwak => suwak.addEventListener('input', logikaSterownika));
 window.addEventListener('keydown', event => {
   const mapaKlawiszy = { ArrowUp: 'UP', ArrowDown: 'DOWN', ArrowLeft: 'LEFT', ArrowRight: 'RIGHT', Enter: 'SELECT' };
   if (event.key in mapaKlawiszy) { event.preventDefault(); wcisnijPrzycisk(mapaKlawiszy[event.key]); }
