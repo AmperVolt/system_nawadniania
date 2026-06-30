@@ -288,7 +288,7 @@ void loop(){
                       lcd.clear();czas_podlewania_min=czas_podlewania_dnia[aktualny_dzien];czas_startu_podlewania=millis();ostatni_start_dzien=aktualny_dzien;ostatni_start_godzina=aktualna_godzina;ostatni_start_minuta=aktualna_minuta;program=1;
                     }
                  }
-  if(program==1){   wyczysc_linie(1);lcd.setCursor(0,1);lcd.print("Podlew ");drukuj_liczbe_4(min((millis()-czas_startu_podlewania)/60000UL,(unsigned long)czas_podlewania_min));lcd.print("/");drukuj_liczbe_4(czas_podlewania_min);
+  if(program==1){   int minuty_podlewania=min((millis()-czas_startu_podlewania)/60000UL,(unsigned long)czas_podlewania_min);int minuty_pozostale=max(0,czas_podlewania_min-minuty_podlewania);wyczysc_linie(1);lcd.setCursor(0,1);lcd.print("Podlew ");lcd.print(minuty_pozostale);lcd.print(" min");
                     digitalWrite(pin_przekaznik_podlewania, HIGH);
                     digitalWrite(pin_przekaznik_napelniania, LOW);
                     if(digitalRead(pin_stop)==LOW){

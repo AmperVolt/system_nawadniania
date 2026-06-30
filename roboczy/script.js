@@ -261,11 +261,9 @@ function liniaProcesuGorna() {
   return znaki.join('');
 }
 
-function liczba4(liczba) { return String(Math.max(0, Math.min(9999, liczba))).padStart(4, '0'); }
-
 function wyswietlProgram() {
-  if (stan.program === 0) drukuj(liniaProcesuGorna(), 'Oczekiwanie');
-  if (stan.program === PROGRAM_PODLEWANIE) drukuj(liniaProcesuGorna(), `Podlew ${liczba4(stan.minutyPodlewania)}/${liczba4(stan.czasPodlewania)}`);
+  if (stan.program === 0) drukuj(liniaProcesuGorna(), '');
+  if (stan.program === PROGRAM_PODLEWANIE) drukuj(liniaProcesuGorna(), `Podlew ${Math.max(0, stan.czasPodlewania - stan.minutyPodlewania)} min`);
   if (stan.program === 2 && stan.wybranyEkran <= 7) { drukuj(`Ustawienia: ${dzienSkrot(stan.wybranyEkran)}`, liniaUstawienDnia(stan.wybranyEkran)); podswietlEdytowanaCyfre(); }
   if (stan.program === 2 && stan.wybranyEkran === 8) { drukuj('Próg załącz.:', `${cyfryProgu()}% wilg.`); podswietlEdytowanaCyfre(); }
   if (stan.program === 2 && stan.wybranyEkran === 9) { drukuj('Czas RTC:', liniaCzasuRtc()); podswietlEdytowanaCyfre(); }
