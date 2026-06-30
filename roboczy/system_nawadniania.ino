@@ -277,7 +277,8 @@ void loop(){
   if(program==2 && wybrany_ekran==9){ lcd.setCursor(0,0);lcd.print("Czas RTC:       ");
                     int godzina_rtc_ekran=tryb_edycji ? godzina_podlewania[0] : aktualna_godzina;
                     int minuta_rtc_ekran=tryb_edycji ? minuta_startu[0] : aktualna_minuta;
-                    lcd.setCursor(0,1);if(godzina_rtc_ekran<10) lcd.print("0");lcd.print(godzina_rtc_ekran);lcd.print(":");if(minuta_rtc_ekran<10) lcd.print("0");lcd.print(minuta_rtc_ekran);lcd.print(" / ");drukuj_dzien_tygodnia(aktualny_dzien);lcd.print("   ");if(tryb_edycji){lcd.setCursor(kolumna_cyfry_rtc(edytowana_cyfra),1);lcd.blink();}else lcd.noBlink();
+                    bool miganie_dnia=tryb_edycji && edytowana_cyfra==4 && ((millis()/500)%2==0);
+                    lcd.setCursor(0,1);if(godzina_rtc_ekran<10) lcd.print("0");lcd.print(godzina_rtc_ekran);lcd.print(":");if(minuta_rtc_ekran<10) lcd.print("0");lcd.print(minuta_rtc_ekran);lcd.print(" / ");if(miganie_dnia) lcd.print("    "); else drukuj_dzien_tygodnia_stale(aktualny_dzien);lcd.print("   ");if(tryb_edycji && edytowana_cyfra<4){lcd.setCursor(kolumna_cyfry_rtc(edytowana_cyfra),1);lcd.blink();}else lcd.noBlink();
                   }
   if(program==5){   lcd.setCursor(0,0);lcd.print("Prog wilg: ");lcd.print(prog_wilgotnosci);lcd.write(byte(0));lcd.print("  "); }
   if(program==6){   digitalWrite(pin_przekaznik_podlewania, LOW);lcd.setCursor(0,0);lcd.print("Napelnianie A2 ");

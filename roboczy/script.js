@@ -67,6 +67,10 @@ class LCD16x2 {
   podswietl(kolumna, wiersz) {
     if (this.komorki[wiersz] && this.komorki[wiersz][kolumna]) this.komorki[wiersz][kolumna].classList.add('podswietlony');
   }
+
+  podswietlZakres(kolumna, wiersz, dlugosc) {
+    for (let i = 0; i < dlugosc; i += 1) this.podswietl(kolumna + i, wiersz);
+  }
 }
 
 const lcd = new LCD16x2('lcd');
@@ -212,7 +216,8 @@ function podswietlEdytowanaCyfre() {
   if (!stan.trybEdycji) return;
   if (stan.wybranyEkran <= 7) lcd.podswietl([0, 1, 3, 4, 8, 9, 10, 11][stan.edytowanaCyfra], 1);
   if (stan.wybranyEkran === 8) lcd.podswietl([0, 1][stan.edytowanaCyfra], 1);
-  if (stan.wybranyEkran === 9) lcd.podswietl([0, 1, 3, 4, 8][stan.edytowanaCyfra], 1);
+  if (stan.wybranyEkran === 9 && stan.edytowanaCyfra <= 3) lcd.podswietl([0, 1, 3, 4][stan.edytowanaCyfra], 1);
+  if (stan.wybranyEkran === 9 && stan.edytowanaCyfra === 4) lcd.podswietlZakres(8, 1, 4);
 }
 function synchronizujCzasZSuwakow() {
   stan.dzien = Number(dzienAktualny.value);
