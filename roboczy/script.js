@@ -86,7 +86,7 @@ const nazwyProgramow = ['AUTO', 'PODLEWANIE', 'DZ. PODL.', 'GODZ. PODL.', 'CZAS 
 const PROGRAM_PODLEWANIE = 1;
 const PROGRAM_NAPELNIANIE = 6;
 const PIERWSZY_EKRAN_KONFIG = 2;
-const OSTATNI_EKRAN_KONFIG = 9;
+const OSTATNI_EKRAN_KONFIG = 10;
 let timerZegara = null;
 const BAZOWY_OKRES_MINUTY_MS = 1000;
 const stan = {
@@ -101,6 +101,9 @@ const stan = {
   dzienPodlewania: 1,
   godzinaPodlewania: 6,
   czasPodlewania: 15,
+  recznyCzasPodlewania: 15,
+  reczneNapelnianie: false,
+  recznePodlewanie: false,
   startPodlewaniaMinuty: null,
   progWilgotnosci: 45,
   dzien: 1,
@@ -195,6 +198,8 @@ function ustawCyfreProgu(indeks, zmiana) {
 function godzinaRtcNaEkran() { return stan.trybEdycji && stan.wybranyEkran === 9 ? godzinaDnia(0) : stan.godzina; }
 function minutaRtcNaEkran() { return stan.trybEdycji && stan.wybranyEkran === 9 ? minutaDnia(0) : stan.minuta; }
 function liniaCzasuRtc() { return `${dwa(godzinaRtcNaEkran())}:${dwa(minutaRtcNaEkran())} / ${dzienSkrot(stan.dzien)}`; }
+function liniaRecznegoStartu1() { return `Napełnij zb:${stan.reczneNapelnianie ? 'ON ' : 'OFF'}`; }
+function liniaRecznegoStartu2() { return `Podlew ${stan.recznePodlewanie ? 'ON ' : 'OFF'} ${String(stan.recznyCzasPodlewania).padStart(4, '0')}m`; }
 function skopiujRtcDoUstawienCzasu() {
   stan.godzinyPodlewania[0] = stan.godzina;
   stan.minutyStartu[0] = stan.minuta;
@@ -228,12 +233,34 @@ function przesunEdytowanaCyfreRtc(kierunek) {
   if (grupaCyfryRtc(poprzednia) !== grupaCyfryRtc(nastepna)) walidujCzasRtc();
   stan.edytowanaCyfra = nastepna;
 }
+
+function ustawCyfreRecznegoCzasu(indeks, zmiana) {
+  const cyfry = String(stan.recznyCzasPodlewania).padStart(4, '0').split('').map(Number);
+  const maksima = [1, 9, 9, 9];
+  cyfry[indeks] = kolejnaCyfra(cyfry[indeks], zmiana, maksima[indeks]);
+  stan.recznyCzasPodlewania = Math.min(1440, Number(cyfry.join('')));
+}
+function uruchomRecznyProces() {
+  if (stan.reczneNapelnianie) {
+    stan.reczneNapelnianie = false;
+    stan.recznePodlewanie = false;
+    rozpocznijNapelnianie();
+  } else if (stan.recznePodlewanie) {
+    stan.reczneNapelnianie = false;
+    stan.recznePodlewanie = false;
+    stan.czasPodlewania = stan.recznyCzasPodlewania;
+    rozpocznijPodlewanie();
+  }
+}
 function podswietlEdytowanaCyfre() {
   if (!stan.trybEdycji) return;
   if (stan.wybranyEkran <= 7) lcd.podswietl([0, 1, 3, 4, 8, 9, 10, 11][stan.edytowanaCyfra], 1);
   if (stan.wybranyEkran === 8) lcd.podswietl([0, 1][stan.edytowanaCyfra], 1);
   if (stan.wybranyEkran === 9 && stan.edytowanaCyfra <= 3) lcd.podswietl([0, 1, 3, 4][stan.edytowanaCyfra], 1);
   if (stan.wybranyEkran === 9 && stan.edytowanaCyfra === 4) lcd.podswietlZakres(8, 1, 4);
+  if (stan.wybranyEkran === 10 && stan.edytowanaCyfra === 0) lcd.podswietlZakres(12, 0, 3);
+  if (stan.wybranyEkran === 10 && stan.edytowanaCyfra >= 1 && stan.edytowanaCyfra <= 4) lcd.podswietl([10, 11, 12, 13][stan.edytowanaCyfra - 1], 1);
+  if (stan.wybranyEkran === 10 && stan.edytowanaCyfra === 5) lcd.podswietlZakres(7, 1, 3);
 }
 function synchronizujCzasZSuwakow() {
   stan.dzien = Number(dzienAktualny.value);
@@ -282,6 +309,7 @@ function wyswietlProgram() {
   if (stan.program === 2 && stan.wybranyEkran <= 7) { drukuj(`Ustawienia: ${dzienSkrot(stan.wybranyEkran)}`, liniaUstawienDnia(stan.wybranyEkran)); podswietlEdytowanaCyfre(); }
   if (stan.program === 2 && stan.wybranyEkran === 8) { drukuj('Próg załącz.:', `${cyfryProgu()}% wilg.`); podswietlEdytowanaCyfre(); }
   if (stan.program === 2 && stan.wybranyEkran === 9) { drukuj('Czas RTC:', liniaCzasuRtc()); podswietlEdytowanaCyfre(); }
+  if (stan.program === 2 && stan.wybranyEkran === 10) { drukuj(liniaRecznegoStartu1(), liniaRecznegoStartu2()); podswietlEdytowanaCyfre(); }
   if (stan.program === PROGRAM_NAPELNIANIE) drukuj(liniaProcesuGorna(), wysrodkuj('Napełnianie'));
   if (stan.program === 7) drukuj('Aktualny dzień:', `${dzienSkrot(stan.dzien)}  UP/DOWN`);
   if (stan.program === 8) drukuj('Aktualna godz:', `${dwa(stan.godzina)}:${dwa(stan.minuta)}`);
@@ -396,6 +424,7 @@ function wcisnijPrzycisk(przycisk) {
       if (stan.wybranyEkran <= 7) walidujUstawieniaDnia(stan.wybranyEkran);
       if (stan.wybranyEkran === 8) walidujProgWilgotnosci();
       if (stan.wybranyEkran === 9) zatwierdzCzasRtc();
+      if (stan.wybranyEkran === 10) uruchomRecznyProces();
       stan.trybEdycji = false;
       stan.edytowanaCyfra = -1;
     }
@@ -405,9 +434,11 @@ function wcisnijPrzycisk(przycisk) {
   if (przycisk === 'RIGHT' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran === 8) stan.edytowanaCyfra = stan.edytowanaCyfra >= 1 ? 0 : stan.edytowanaCyfra + 1;
   if (przycisk === 'LEFT' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran === 8) stan.edytowanaCyfra = stan.edytowanaCyfra <= 0 ? 1 : stan.edytowanaCyfra - 1;
   if (przycisk === 'RIGHT' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran === 9) przesunEdytowanaCyfreRtc(1);
+  if (przycisk === 'RIGHT' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran === 10) stan.edytowanaCyfra = stan.edytowanaCyfra >= 5 ? 0 : stan.edytowanaCyfra + 1;
   if (przycisk === 'LEFT' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran === 9) przesunEdytowanaCyfreRtc(-1);
+  if (przycisk === 'LEFT' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran === 10) stan.edytowanaCyfra = stan.edytowanaCyfra <= 0 ? 5 : stan.edytowanaCyfra - 1;
   if (przycisk === 'UP' && stan.program === 2 && !stan.trybEdycji) {
-    if (stan.wybranyEkran >= 9) {
+    if (stan.wybranyEkran >= OSTATNI_EKRAN_KONFIG) {
       stan.program = 0;
       stan.wybranyEkran = 1;
     } else stan.wybranyEkran += 1;
@@ -423,7 +454,17 @@ function wcisnijPrzycisk(przycisk) {
   if (przycisk === 'UP' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran === 8) ustawCyfreProgu(stan.edytowanaCyfra, 1);
   if (przycisk === 'DOWN' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran === 8) ustawCyfreProgu(stan.edytowanaCyfra, -1);
   if (przycisk === 'UP' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran === 9) ustawCyfreRtc(stan.edytowanaCyfra, 1);
+  if (przycisk === 'UP' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran === 10) {
+    if (stan.edytowanaCyfra === 0) { stan.reczneNapelnianie = !stan.reczneNapelnianie; if (stan.reczneNapelnianie) stan.recznePodlewanie = false; }
+    else if (stan.edytowanaCyfra <= 4) ustawCyfreRecznegoCzasu(stan.edytowanaCyfra - 1, 1);
+    else { stan.recznePodlewanie = !stan.recznePodlewanie; if (stan.recznePodlewanie) stan.reczneNapelnianie = false; }
+  }
   if (przycisk === 'DOWN' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran === 9) ustawCyfreRtc(stan.edytowanaCyfra, -1);
+  if (przycisk === 'DOWN' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran === 10) {
+    if (stan.edytowanaCyfra === 0) { stan.reczneNapelnianie = !stan.reczneNapelnianie; if (stan.reczneNapelnianie) stan.recznePodlewanie = false; }
+    else if (stan.edytowanaCyfra <= 4) ustawCyfreRecznegoCzasu(stan.edytowanaCyfra - 1, -1);
+    else { stan.recznePodlewanie = !stan.recznePodlewanie; if (stan.recznePodlewanie) stan.reczneNapelnianie = false; }
+  }
   if (przycisk === 'UP' && stan.program === 7 && stan.dzien < 7) dzienAktualny.value = stan.dzien + 1;
   if (przycisk === 'DOWN' && stan.program === 7 && stan.dzien > 1) dzienAktualny.value = stan.dzien - 1;
   if (przycisk === 'UP' && stan.program === 8 && stan.godzina < 23) aktualnyCzas.value = czasNaMinuty(stan.godzina + 1, stan.minuta);
@@ -434,7 +475,7 @@ function wcisnijPrzycisk(przycisk) {
 }
 
 function resetSymulatora() {
-  Object.assign(stan, { program: 0, wybranyEkran: 1, trybEdycji: false, edytowanePole: 'godzina', edytowanaCyfra: -1, minutyStartu: [0, 0, 0, 0, 0, 0, 0, 0], godzinyPodlewania: [0, 6, 6, 6, 6, 6, 6, 6], czasyPodlewania: [0, 15, 15, 15, 15, 15, 15, 15], dzienPodlewania: 1, godzinaPodlewania: 6, czasPodlewania: 15, progWilgotnosci: 45, dzien: 1, godzina: 6, minuta: 0, minutyPodlewania: 0, pompa: false, napelnianie: false, startPodlewaniaMinuty: null, ostatniPrzycisk: 'NONE', ostatniStart: '', zegarDziala: false });
+  Object.assign(stan, { program: 0, wybranyEkran: 1, trybEdycji: false, edytowanePole: 'godzina', edytowanaCyfra: -1, minutyStartu: [0, 0, 0, 0, 0, 0, 0, 0], godzinyPodlewania: [0, 6, 6, 6, 6, 6, 6, 6], czasyPodlewania: [0, 15, 15, 15, 15, 15, 15, 15], dzienPodlewania: 1, godzinaPodlewania: 6, czasPodlewania: 15, recznyCzasPodlewania: 15, reczneNapelnianie: false, recznePodlewanie: false, progWilgotnosci: 45, dzien: 1, godzina: 6, minuta: 0, minutyPodlewania: 0, pompa: false, napelnianie: false, startPodlewaniaMinuty: null, ostatniPrzycisk: 'NONE', ostatniStart: '', zegarDziala: false });
   wilgotnosc.value = 35;
   poziomWody.value = 35;
   dzienAktualny.value = 1;
