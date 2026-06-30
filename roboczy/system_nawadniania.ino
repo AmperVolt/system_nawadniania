@@ -71,15 +71,24 @@ int kolumna_cyfry(int indeks){
   return kolumny[indeks];
 }
 
+int kolejna_cyfra(int cyfra, int zmiana, int maksimum){
+  if(zmiana>0) return cyfra>=maksimum ? 0 : cyfra+1;
+  return cyfra<=0 ? maksimum : cyfra-1;
+}
+
 void ustaw_cyfre_harmonogramu(int dzien, int indeks, int zmiana){
   int h=godzina_podlewania[dzien];
   int m=minuta_startu[dzien];
   int t=czas_podlewania_dnia[dzien];
   int cyfry[7]={h/10,h%10,m/10,m%10,(t/100)%10,(t/10)%10,t%10};
-  cyfry[indeks]=(cyfry[indeks]+zmiana+10)%10;
+  if(indeks==0) cyfry[0]=kolejna_cyfra(cyfry[0],zmiana,2);
+  if(indeks==1) cyfry[1]=kolejna_cyfra(cyfry[1],zmiana,cyfry[0]==2 ? 3 : 9);
+  if(indeks==2) cyfry[2]=kolejna_cyfra(cyfry[2],zmiana,5);
+  if(indeks==3) cyfry[3]=kolejna_cyfra(cyfry[3],zmiana,9);
+  if(indeks>=4) cyfry[indeks]=kolejna_cyfra(cyfry[indeks],zmiana,9);
   h=cyfry[0]*10+cyfry[1]; if(h>23) h=23;
   m=cyfry[2]*10+cyfry[3]; if(m>59) m=59;
-  t=cyfry[4]*100+cyfry[5]*10+cyfry[6]; if(t<1) t=1;
+  t=cyfry[4]*100+cyfry[5]*10+cyfry[6]; if(t<1) t=zmiana<0 ? 999 : 1;
   godzina_podlewania[dzien]=h; minuta_startu[dzien]=m; czas_podlewania_dnia[dzien]=t;
 }
 

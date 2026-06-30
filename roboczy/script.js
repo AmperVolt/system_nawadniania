@@ -119,12 +119,23 @@ function minutaDnia(dzien) { return stan.minutyStartu[Number(dzien)] || 0; }
 function czasDnia(dzien) { return stan.czasyPodlewania[Number(dzien)] || 1; }
 function wartoscPola(tekst) { return tekst; }
 function cyfryUstawien(dzien) { return `${dwa(godzinaDnia(dzien))}${dwa(minutaDnia(dzien))}${String(czasDnia(dzien)).padStart(3, '0')}`; }
+function kolejnaCyfra(cyfra, zmiana, maksimum) {
+  if (zmiana > 0) return cyfra >= maksimum ? 0 : cyfra + 1;
+  return cyfra <= 0 ? maksimum : cyfra - 1;
+}
 function ustawCyfreUstawien(dzien, indeks, zmiana) {
   const cyfry = cyfryUstawien(dzien).split('').map(Number);
-  cyfry[indeks] = (cyfry[indeks] + zmiana + 10) % 10;
-  const godzina = Math.min(23, Number(`${cyfry[0]}${cyfry[1]}`));
-  const minuta = Math.min(59, Number(`${cyfry[2]}${cyfry[3]}`));
-  const czas = Math.max(1, Number(`${cyfry[4]}${cyfry[5]}${cyfry[6]}`));
+  if (indeks === 0) cyfry[0] = kolejnaCyfra(cyfry[0], zmiana, 2);
+  if (indeks === 1) cyfry[1] = kolejnaCyfra(cyfry[1], zmiana, cyfry[0] === 2 ? 3 : 9);
+  if (indeks === 2) cyfry[2] = kolejnaCyfra(cyfry[2], zmiana, 5);
+  if (indeks === 3) cyfry[3] = kolejnaCyfra(cyfry[3], zmiana, 9);
+  if (indeks >= 4) cyfry[indeks] = kolejnaCyfra(cyfry[indeks], zmiana, 9);
+  let godzina = Number(`${cyfry[0]}${cyfry[1]}`);
+  if (godzina > 23) { godzina = 23; cyfry[0] = 2; cyfry[1] = 3; }
+  let minuta = Number(`${cyfry[2]}${cyfry[3]}`);
+  if (minuta > 59) { minuta = 59; cyfry[2] = 5; cyfry[3] = 9; }
+  let czas = Number(`${cyfry[4]}${cyfry[5]}${cyfry[6]}`);
+  if (czas < 1) czas = zmiana < 0 ? 999 : 1;
   stan.godzinyPodlewania[dzien] = godzina;
   stan.minutyStartu[dzien] = minuta;
   stan.czasyPodlewania[dzien] = czas;
