@@ -65,6 +65,11 @@ void drukuj_dzien_tygodnia(int dzien){
   else lcd.print(dni_tygodnia[dzien]);
 }
 
+void drukuj_dzien_tygodnia_stale(int dzien){
+  drukuj_dzien_tygodnia(dzien);
+  if(dzien==2 || dzien==3 || dzien==5 || dzien==7) lcd.print(" ");
+}
+
 void drukuj_cyfre(int cyfra, int indeks){
   lcd.print(cyfra);
 }
@@ -79,16 +84,22 @@ int kolejna_cyfra(int cyfra, int zmiana, int maksimum){
   return cyfra<=0 ? maksimum : cyfra-1;
 }
 
-void ustaw_cyfre_harmonogramu(int dzien, int indeks, int zmiana){
-  int h=godzina_podlewania[dzien];
-  int m=minuta_startu[dzien];
-  int t=czas_podlewania_dnia[dzien];
-  int cyfry[8]={h/10,h%10,m/10,m%10,(t/1000)%10,(t/100)%10,(t/10)%10,t%10};
-  int maksima[8]={2,9,5,9,1,9,9,9};
+void ustaw_cyfre_czasu(int &godzina, int &minuta, int indeks, int zmiana){
+  int cyfry[4]={godzina/10,godzina%10,minuta/10,minuta%10};
+  int maksima[4]={2,9,5,9};
   cyfry[indeks]=kolejna_cyfra(cyfry[indeks],zmiana,maksima[indeks]);
-  godzina_podlewania[dzien]=cyfry[0]*10+cyfry[1];
-  minuta_startu[dzien]=cyfry[2]*10+cyfry[3];
-  czas_podlewania_dnia[dzien]=cyfry[4]*1000+cyfry[5]*100+cyfry[6]*10+cyfry[7];
+  godzina=cyfry[0]*10+cyfry[1];
+  minuta=cyfry[2]*10+cyfry[3];
+}
+
+void ustaw_cyfre_harmonogramu(int dzien, int indeks, int zmiana){
+  if(indeks<=3){ustaw_cyfre_czasu(godzina_podlewania[dzien], minuta_startu[dzien], indeks, zmiana);return;}
+  int t=czas_podlewania_dnia[dzien];
+  int cyfry[4]={(t/1000)%10,(t/100)%10,(t/10)%10,t%10};
+  int maksima[4]={1,9,9,9};
+  int indeks_czasu=indeks-4;
+  cyfry[indeks_czasu]=kolejna_cyfra(cyfry[indeks_czasu],zmiana,maksima[indeks_czasu]);
+  czas_podlewania_dnia[dzien]=cyfry[0]*1000+cyfry[1]*100+cyfry[2]*10+cyfry[3];
 }
 
 void waliduj_ustawienia_dnia(int dzien){
@@ -130,10 +141,7 @@ int kolumna_cyfry_progu(int indeks){return indeks;}
 
 void ustaw_cyfre_rtc(int indeks, int zmiana){
   if(indeks==0){aktualny_dzien=zmiana>0 ? (aktualny_dzien>=7 ? 1 : aktualny_dzien+1) : (aktualny_dzien<=1 ? 7 : aktualny_dzien-1);}
-  if(indeks==1){aktualna_godzina=kolejna_cyfra(aktualna_godzina/10,zmiana,2)*10 + aktualna_godzina%10;}
-  if(indeks==2){aktualna_godzina=(aktualna_godzina/10)*10 + kolejna_cyfra(aktualna_godzina%10,zmiana,9);}
-  if(indeks==3){aktualna_minuta=kolejna_cyfra(aktualna_minuta/10,zmiana,5)*10 + aktualna_minuta%10;}
-  if(indeks==4){aktualna_minuta=(aktualna_minuta/10)*10 + kolejna_cyfra(aktualna_minuta%10,zmiana,9);}
+  if(indeks>=1) ustaw_cyfre_czasu(aktualna_godzina, aktualna_minuta, indeks-1, zmiana);
 }
 
 void waliduj_czas_rtc(){
@@ -211,7 +219,7 @@ void setup(){
 void pokaz_status(){
   if(millis()-czas_LCD>250){
     czas_LCD=millis();
-    lcd.setCursor(0,1);drukuj_dzien_tygodnia(aktualny_dzien);lcd.print(" ");
+    lcd.setCursor(0,1);drukuj_dzien_tygodnia_stale(aktualny_dzien);lcd.print(" ");
     if(aktualna_godzina<10) lcd.print("0");lcd.print(aktualna_godzina);lcd.print(":");
     if(aktualna_minuta<10) lcd.print("0");lcd.print(aktualna_minuta);
     lcd.print(" W=");if(pomiar_wilgotnosci<10) lcd.print(" ");lcd.print(pomiar_wilgotnosci);lcd.write(byte(0));lcd.print(" ");
@@ -251,7 +259,7 @@ void loop(){
                     lcd.setCursor(0,1);if(prog_wilgotnosci<10) lcd.print("0");lcd.print(prog_wilgotnosci);lcd.write(byte(0));lcd.print(" wilg.");if(tryb_edycji){lcd.setCursor(kolumna_cyfry_progu(edytowana_cyfra),1);lcd.blink();}else lcd.noBlink();
                  }
   if(program==2 && wybrany_ekran==9){ lcd.setCursor(0,0);lcd.print("Czas RTC:       ");
-                    lcd.setCursor(0,1);drukuj_dzien_tygodnia(aktualny_dzien);lcd.print(" ");if(aktualna_godzina<10) lcd.print("0");lcd.print(aktualna_godzina);lcd.print(":");if(aktualna_minuta<10) lcd.print("0");lcd.print(aktualna_minuta);lcd.print("   ");if(tryb_edycji){lcd.setCursor(kolumna_cyfry_rtc(edytowana_cyfra),1);lcd.blink();}else lcd.noBlink();
+                    lcd.setCursor(0,1);drukuj_dzien_tygodnia_stale(aktualny_dzien);lcd.print(" ");if(aktualna_godzina<10) lcd.print("0");lcd.print(aktualna_godzina);lcd.print(":");if(aktualna_minuta<10) lcd.print("0");lcd.print(aktualna_minuta);lcd.print("   ");if(tryb_edycji){lcd.setCursor(kolumna_cyfry_rtc(edytowana_cyfra),1);lcd.blink();}else lcd.noBlink();
                  }
   if(program==5){   lcd.setCursor(0,0);lcd.print("Prog wilg: ");lcd.print(prog_wilgotnosci);lcd.write(byte(0));lcd.print("  "); }
   if(program==6){   digitalWrite(pin_przekaznik_podlewania, LOW);lcd.setCursor(0,0);lcd.print("Napelnianie A2 ");

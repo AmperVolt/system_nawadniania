@@ -123,12 +123,22 @@ function kolejnaCyfra(cyfra, zmiana, maksimum) {
   if (zmiana > 0) return cyfra >= maksimum ? 0 : cyfra + 1;
   return cyfra <= 0 ? maksimum : cyfra - 1;
 }
+function ustawCyfreCzasu(godzina, minuta, indeks, zmiana) {
+  const cyfry = `${dwa(godzina)}${dwa(minuta)}`.split('').map(Number);
+  const maksima = [2, 9, 5, 9];
+  cyfry[indeks] = kolejnaCyfra(cyfry[indeks], zmiana, maksima[indeks]);
+  return { godzina: Number(`${cyfry[0]}${cyfry[1]}`), minuta: Number(`${cyfry[2]}${cyfry[3]}`) };
+}
 function ustawCyfreUstawien(dzien, indeks, zmiana) {
+  if (indeks <= 3) {
+    const czas = ustawCyfreCzasu(godzinaDnia(dzien), minutaDnia(dzien), indeks, zmiana);
+    stan.godzinyPodlewania[dzien] = czas.godzina;
+    stan.minutyStartu[dzien] = czas.minuta;
+    return;
+  }
   const cyfry = cyfryUstawien(dzien).split('').map(Number);
   const maksima = [2, 9, 5, 9, 1, 9, 9, 9];
   cyfry[indeks] = kolejnaCyfra(cyfry[indeks], zmiana, maksima[indeks]);
-  stan.godzinyPodlewania[dzien] = Number(`${cyfry[0]}${cyfry[1]}`);
-  stan.minutyStartu[dzien] = Number(`${cyfry[2]}${cyfry[3]}`);
   stan.czasyPodlewania[dzien] = Number(`${cyfry[4]}${cyfry[5]}${cyfry[6]}${cyfry[7]}`);
 }
 function walidujUstawieniaDnia(dzien) {
@@ -162,13 +172,14 @@ function ustawCyfreProgu(indeks, zmiana) {
   if (prog > 99) prog = zmiana > 0 ? 0 : 99;
   stan.progWilgotnosci = prog;
 }
-function liniaCzasuRtc() { return `${dzienSkrot(stan.dzien)} ${dwa(stan.godzina)}:${dwa(stan.minuta)}`; }
+function liniaCzasuRtc() { return `${dzienSkrot(stan.dzien).padEnd(4, ' ')} ${dwa(stan.godzina)}:${dwa(stan.minuta)}`; }
 function ustawCyfreRtc(indeks, zmiana) {
   if (indeks === 0) stan.dzien = zmiana > 0 ? (stan.dzien >= 7 ? 1 : stan.dzien + 1) : (stan.dzien <= 1 ? 7 : stan.dzien - 1);
-  if (indeks === 1) stan.godzina = kolejnaCyfra(Math.floor(stan.godzina / 10), zmiana, 2) * 10 + (stan.godzina % 10);
-  if (indeks === 2) stan.godzina = Math.floor(stan.godzina / 10) * 10 + kolejnaCyfra(stan.godzina % 10, zmiana, 9);
-  if (indeks === 3) stan.minuta = kolejnaCyfra(Math.floor(stan.minuta / 10), zmiana, 5) * 10 + (stan.minuta % 10);
-  if (indeks === 4) stan.minuta = Math.floor(stan.minuta / 10) * 10 + kolejnaCyfra(stan.minuta % 10, zmiana, 9);
+  if (indeks >= 1) {
+    const czas = ustawCyfreCzasu(stan.godzina, stan.minuta, indeks - 1, zmiana);
+    stan.godzina = czas.godzina;
+    stan.minuta = czas.minuta;
+  }
   synchronizujSuwakiZCzasem();
 }
 function walidujCzasRtc() {
