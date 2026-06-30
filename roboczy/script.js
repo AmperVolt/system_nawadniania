@@ -261,9 +261,14 @@ function liniaProcesuGorna() {
   return znaki.join('');
 }
 
+function liniaPodlewania() {
+  const pozostalo = `${Math.max(0, stan.czasPodlewania - stan.minutyPodlewania)}m`;
+  return `Podlewanie${pozostalo.padStart(16 - 'Podlewanie'.length, ' ')}`;
+}
+
 function wyswietlProgram() {
   if (stan.program === 0) drukuj(liniaProcesuGorna(), '');
-  if (stan.program === PROGRAM_PODLEWANIE) drukuj(liniaProcesuGorna(), `Podlew ${Math.max(0, stan.czasPodlewania - stan.minutyPodlewania)} min`);
+  if (stan.program === PROGRAM_PODLEWANIE) drukuj(liniaProcesuGorna(), liniaPodlewania());
   if (stan.program === 2 && stan.wybranyEkran <= 7) { drukuj(`Ustawienia: ${dzienSkrot(stan.wybranyEkran)}`, liniaUstawienDnia(stan.wybranyEkran)); podswietlEdytowanaCyfre(); }
   if (stan.program === 2 && stan.wybranyEkran === 8) { drukuj('Próg załącz.:', `${cyfryProgu()}% wilg.`); podswietlEdytowanaCyfre(); }
   if (stan.program === 2 && stan.wybranyEkran === 9) { drukuj('Czas RTC:', liniaCzasuRtc()); podswietlEdytowanaCyfre(); }
