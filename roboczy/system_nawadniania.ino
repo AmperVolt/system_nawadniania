@@ -81,15 +81,23 @@ void ustaw_cyfre_harmonogramu(int dzien, int indeks, int zmiana){
   int m=minuta_startu[dzien];
   int t=czas_podlewania_dnia[dzien];
   int cyfry[8]={h/10,h%10,m/10,m%10,(t/1000)%10,(t/100)%10,(t/10)%10,t%10};
-  if(indeks==0) cyfry[0]=kolejna_cyfra(cyfry[0],zmiana,2);
-  if(indeks==1) cyfry[1]=kolejna_cyfra(cyfry[1],zmiana,cyfry[0]==2 ? 3 : 9);
-  if(indeks==2) cyfry[2]=kolejna_cyfra(cyfry[2],zmiana,5);
-  if(indeks==3) cyfry[3]=kolejna_cyfra(cyfry[3],zmiana,9);
-  if(indeks>=4) cyfry[indeks]=kolejna_cyfra(cyfry[indeks],zmiana,9);
-  h=cyfry[0]*10+cyfry[1]; if(h>23) h=23;
-  m=cyfry[2]*10+cyfry[3]; if(m>59) m=59;
-  t=cyfry[4]*1000+cyfry[5]*100+cyfry[6]*10+cyfry[7]; if(t>1440) t=1440; if(t<1) t=zmiana<0 ? 1440 : 1;
-  godzina_podlewania[dzien]=h; minuta_startu[dzien]=m; czas_podlewania_dnia[dzien]=t;
+  int maksima[8]={3,9,5,9,1,9,9,9};
+  cyfry[indeks]=kolejna_cyfra(cyfry[indeks],zmiana,maksima[indeks]);
+  godzina_podlewania[dzien]=cyfry[0]*10+cyfry[1];
+  minuta_startu[dzien]=cyfry[2]*10+cyfry[3];
+  czas_podlewania_dnia[dzien]=cyfry[4]*1000+cyfry[5]*100+cyfry[6]*10+cyfry[7];
+}
+
+void waliduj_ustawienia_dnia(int dzien){
+  if(godzina_podlewania[dzien]>23) godzina_podlewania[dzien]=23;
+  if(minuta_startu[dzien]>59) minuta_startu[dzien]=59;
+  if(czas_podlewania_dnia[dzien]>1440) czas_podlewania_dnia[dzien]=1440;
+  if(czas_podlewania_dnia[dzien]<1) czas_podlewania_dnia[dzien]=1;
+}
+
+void waliduj_prog_wilgotnosci(){
+  if(prog_wilgotnosci>100) prog_wilgotnosci=100;
+  if(prog_wilgotnosci<0) prog_wilgotnosci=0;
 }
 
 void ustaw_cyfre_progu(int indeks, int zmiana){
@@ -209,7 +217,7 @@ void loop(){
       czas_DS=millis();lcd.clear();
       if(program!=2){program=2;wybrany_ekran=1;tryb_edycji=false;edytowana_cyfra=-1;}
       else if(!tryb_edycji){tryb_edycji=true;edytowana_cyfra=0;}
-      else{tryb_edycji=false;edytowana_cyfra=-1;}
+      else{if(wybrany_ekran<=7) waliduj_ustawienia_dnia(wybrany_ekran); if(wybrany_ekran==8) waliduj_prog_wilgotnosci(); tryb_edycji=false;edytowana_cyfra=-1;}
     } //SELECT - edycja / zatwierdzenie
 //-------------koniec obsługi przycisków z arduino LCD shield---------------------------------
 }

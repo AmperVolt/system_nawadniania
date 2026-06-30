@@ -116,7 +116,7 @@ function opisPlywaka(stanPlywaka) { return stanPlywaka ? 'ZAŁ.' : 'ROZŁ.'; }
 function kluczCzasu() { return `D${stan.dzien}-${stan.godzina}-${stan.minuta}`; }
 function godzinaDnia(dzien) { return stan.godzinyPodlewania[Number(dzien)] || 0; }
 function minutaDnia(dzien) { return stan.minutyStartu[Number(dzien)] || 0; }
-function czasDnia(dzien) { return stan.czasyPodlewania[Number(dzien)] || 1; }
+function czasDnia(dzien) { return stan.czasyPodlewania[Number(dzien)] ?? 1; }
 function wartoscPola(tekst) { return tekst; }
 function cyfryUstawien(dzien) { return `${dwa(godzinaDnia(dzien))}${dwa(minutaDnia(dzien))}${String(czasDnia(dzien)).padStart(4, '0')}`; }
 function kolejnaCyfra(cyfra, zmiana, maksimum) {
@@ -125,21 +125,19 @@ function kolejnaCyfra(cyfra, zmiana, maksimum) {
 }
 function ustawCyfreUstawien(dzien, indeks, zmiana) {
   const cyfry = cyfryUstawien(dzien).split('').map(Number);
-  if (indeks === 0) cyfry[0] = kolejnaCyfra(cyfry[0], zmiana, 2);
-  if (indeks === 1) cyfry[1] = kolejnaCyfra(cyfry[1], zmiana, cyfry[0] === 2 ? 3 : 9);
-  if (indeks === 2) cyfry[2] = kolejnaCyfra(cyfry[2], zmiana, 5);
-  if (indeks === 3) cyfry[3] = kolejnaCyfra(cyfry[3], zmiana, 9);
-  if (indeks >= 4) cyfry[indeks] = kolejnaCyfra(cyfry[indeks], zmiana, 9);
-  let godzina = Number(`${cyfry[0]}${cyfry[1]}`);
-  if (godzina > 23) { godzina = 23; cyfry[0] = 2; cyfry[1] = 3; }
-  let minuta = Number(`${cyfry[2]}${cyfry[3]}`);
-  if (minuta > 59) { minuta = 59; cyfry[2] = 5; cyfry[3] = 9; }
-  let czas = Number(`${cyfry[4]}${cyfry[5]}${cyfry[6]}${cyfry[7]}`);
-  if (czas > 1440) czas = 1440;
-  if (czas < 1) czas = zmiana < 0 ? 1440 : 1;
-  stan.godzinyPodlewania[dzien] = godzina;
-  stan.minutyStartu[dzien] = minuta;
-  stan.czasyPodlewania[dzien] = czas;
+  const maksima = [3, 9, 5, 9, 1, 9, 9, 9];
+  cyfry[indeks] = kolejnaCyfra(cyfry[indeks], zmiana, maksima[indeks]);
+  stan.godzinyPodlewania[dzien] = Number(`${cyfry[0]}${cyfry[1]}`);
+  stan.minutyStartu[dzien] = Number(`${cyfry[2]}${cyfry[3]}`);
+  stan.czasyPodlewania[dzien] = Number(`${cyfry[4]}${cyfry[5]}${cyfry[6]}${cyfry[7]}`);
+}
+function walidujUstawieniaDnia(dzien) {
+  stan.godzinyPodlewania[dzien] = Math.min(23, godzinaDnia(dzien));
+  stan.minutyStartu[dzien] = Math.min(59, minutaDnia(dzien));
+  stan.czasyPodlewania[dzien] = Math.max(1, Math.min(1440, czasDnia(dzien)));
+}
+function walidujProgWilgotnosci() {
+  stan.progWilgotnosci = Math.max(0, Math.min(100, stan.progWilgotnosci));
 }
 function liniaUstawienDnia(dzien) {
   const cyfry = cyfryUstawien(dzien).split('');
@@ -271,6 +269,8 @@ function wcisnijPrzycisk(przycisk) {
       stan.trybEdycji = true;
       stan.edytowanaCyfra = 0;
     } else {
+      if (stan.wybranyEkran <= 7) walidujUstawieniaDnia(stan.wybranyEkran);
+      if (stan.wybranyEkran === 8) walidujProgWilgotnosci();
       stan.trybEdycji = false;
       stan.edytowanaCyfra = -1;
     }
