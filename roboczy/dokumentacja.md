@@ -23,7 +23,7 @@
 Pin A4 pozostaje wejściem analogowym czujnika wilgotności M335. Przekaźnik napełniania zbiornika jest podłączony do A2, a przekaźnik pompy podlewania do wolnego pinu A5.
 
 ## Opis działania
-Sterownik pracuje na podstawie harmonogramu tygodniowego: użytkownik przełącza dni skrótami (Pon., Wt., Śr., Czw., Pt., Sob., Nd.), ustawia dla każdego dnia godzinę rozpoczęcia i czas podlewania w minutach (do 999 min), a po niedzieli ustawia próg wilgotności gleby. UP/DOWN przełącza dni albo próg, SELECT przechodzi kolejno po cyfrach godziny, minuty i czasu podlewania oraz zatwierdza zmiany, a w edycji UP/DOWN zmienia migającą cyfrę. Podlewanie uruchamia się tylko wtedy, gdy aktualny dzień i godzina zgadzają się z harmonogramem, wilgotność gleby jest mniejsza od progu i zbiornik nie jest pusty.
+Sterownik pracuje na podstawie harmonogramu tygodniowego: użytkownik przełącza dni skrótami (Pon., Wt., Śr., Czw., Pt., Sob., Nd.), ustawia dla każdego dnia godzinę rozpoczęcia i czas podlewania w minutach (do 999 min), a po niedzieli ustawia próg wilgotności gleby. UP/DOWN przełącza dni albo próg, SELECT przechodzi kolejno po cyfrach godziny, minuty i czasu podlewania oraz zatwierdza zmiany, a w edycji UP/DOWN zmienia podświetloną/migającą cyfrę. Podlewanie uruchamia się tylko wtedy, gdy aktualny dzień i godzina zgadzają się z harmonogramem, wilgotność gleby jest mniejsza od progu i zbiornik nie jest pusty.
 
 Podlewanie jest czasowe, domyślnie 15 minut. W trakcie podlewania działa przekaźnik pompy podlewania, a przekaźnik napełniania A2 pozostaje wyłączony. STOP na D2 albo sygnał PUSTY przerywa podlewanie. Po zakończeniu czasu podlewania, po STOP albo po wykryciu pustego zbiornika sterownik automatycznie przechodzi do napełniania zbiornika.
 

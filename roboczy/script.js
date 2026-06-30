@@ -59,8 +59,13 @@ class LCD16x2 {
     for (let wiersz = 0; wiersz < this.wiersze; wiersz += 1) {
       for (let kolumna = 0; kolumna < this.kolumny; kolumna += 1) {
         this.komorki[wiersz][kolumna].textContent = this.bufor[wiersz][kolumna];
+        this.komorki[wiersz][kolumna].classList.remove('podswietlony');
       }
     }
+  }
+
+  podswietl(kolumna, wiersz) {
+    if (this.komorki[wiersz] && this.komorki[wiersz][kolumna]) this.komorki[wiersz][kolumna].classList.add('podswietlony');
   }
 }
 
@@ -112,8 +117,7 @@ function kluczCzasu() { return `D${stan.dzien}-${stan.godzina}-${stan.minuta}`; 
 function godzinaDnia(dzien) { return stan.godzinyPodlewania[Number(dzien)] || 0; }
 function minutaDnia(dzien) { return stan.minutyStartu[Number(dzien)] || 0; }
 function czasDnia(dzien) { return stan.czasyPodlewania[Number(dzien)] || 1; }
-function pokazMigajace() { return Math.floor(Date.now() / 500) % 2 === 0; }
-function wartoscPola(tekst, aktywne) { return aktywne && stan.trybEdycji && !pokazMigajace() ? ' '.repeat(String(tekst).length) : tekst; }
+function wartoscPola(tekst) { return tekst; }
 function cyfryUstawien(dzien) { return `${dwa(godzinaDnia(dzien))}${dwa(minutaDnia(dzien))}${String(czasDnia(dzien)).padStart(3, '0')}`; }
 function ustawCyfreUstawien(dzien, indeks, zmiana) {
   const cyfry = cyfryUstawien(dzien).split('').map(Number);
@@ -127,8 +131,12 @@ function ustawCyfreUstawien(dzien, indeks, zmiana) {
 }
 function liniaUstawienDnia(dzien) {
   const cyfry = cyfryUstawien(dzien).split('');
-  const pokaz = cyfry.map((cyfra, indeks) => (stan.trybEdycji && stan.edytowanaCyfra === indeks && !pokazMigajace() ? ' ' : cyfra));
-  return `${pokaz[0]}${pokaz[1]}:${pokaz[2]}${pokaz[3]} / ${pokaz[4]}${pokaz[5]}${pokaz[6]}min`;
+  return `${cyfry[0]}${cyfry[1]}:${cyfry[2]}${cyfry[3]} / ${cyfry[4]}${cyfry[5]}${cyfry[6]}min`;
+}
+function podswietlEdytowanaCyfre() {
+  if (!stan.trybEdycji) return;
+  if (stan.wybranyEkran <= 7) lcd.podswietl([0, 1, 3, 4, 8, 9, 10][stan.edytowanaCyfra], 1);
+  if (stan.wybranyEkran === 8) lcd.podswietl(0, 1);
 }
 function synchronizujCzasZSuwakow() {
   stan.dzien = Number(dzienAktualny.value);
@@ -156,8 +164,8 @@ function wyswietlProgram() {
   const wilg = Number(wilgotnosc.value);
   if (stan.program === 0) drukuj(`AUTO ${dzienSkrot(stan.dzien)} G${dwa(godzinaDnia(stan.dzien))}`, `W${wilg}% T${czasDnia(stan.dzien)}m`);
   if (stan.program === PROGRAM_PODLEWANIE) drukuj('Podlewanie', `${stan.minutyPodlewania}/${stan.czasPodlewania}m STOP D2`);
-  if (stan.program === 2 && stan.wybranyEkran <= 7) drukuj(`Ustawienia: ${dzienSkrot(stan.wybranyEkran)}`, liniaUstawienDnia(stan.wybranyEkran));
-  if (stan.program === 2 && stan.wybranyEkran === 8) drukuj('Prog zalacz.:', `${wartoscPola(String(stan.progWilgotnosci), true)}% wilg.`);
+  if (stan.program === 2 && stan.wybranyEkran <= 7) { drukuj(`Ustawienia: ${dzienSkrot(stan.wybranyEkran)}`, liniaUstawienDnia(stan.wybranyEkran)); podswietlEdytowanaCyfre(); }
+  if (stan.program === 2 && stan.wybranyEkran === 8) { drukuj('Prog zalacz.:', `${wartoscPola(String(stan.progWilgotnosci))}% wilg.`); podswietlEdytowanaCyfre(); }
   if (stan.program === PROGRAM_NAPELNIANIE) drukuj('Napelnianie', czujnikPelny() ? 'Zbiornik pelny' : 'Przekaznik A2 ON');
   if (stan.program === 7) drukuj('Aktualny dzien:', `${dzienSkrot(stan.dzien)}  UP/DOWN`);
   if (stan.program === 8) drukuj('Aktualna godz:', `${dwa(stan.godzina)}:${dwa(stan.minuta)}`);
@@ -242,13 +250,13 @@ function wcisnijPrzycisk(przycisk) {
     } else if (!stan.trybEdycji) {
       stan.trybEdycji = true;
       stan.edytowanaCyfra = 0;
-    } else if (stan.wybranyEkran <= 7 && stan.edytowanaCyfra < 6) {
-      stan.edytowanaCyfra += 1;
     } else {
       stan.trybEdycji = false;
       stan.edytowanaCyfra = -1;
     }
   }
+  if (przycisk === 'RIGHT' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran <= 7) stan.edytowanaCyfra = stan.edytowanaCyfra >= 6 ? 0 : stan.edytowanaCyfra + 1;
+  if (przycisk === 'LEFT' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran <= 7) stan.edytowanaCyfra = stan.edytowanaCyfra <= 0 ? 6 : stan.edytowanaCyfra - 1;
   if (przycisk === 'UP' && stan.program === 2 && !stan.trybEdycji) stan.wybranyEkran = stan.wybranyEkran >= 8 ? 1 : stan.wybranyEkran + 1;
   if (przycisk === 'DOWN' && stan.program === 2 && !stan.trybEdycji) stan.wybranyEkran = stan.wybranyEkran <= 1 ? 8 : stan.wybranyEkran - 1;
   if (przycisk === 'UP' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran <= 7) ustawCyfreUstawien(stan.wybranyEkran, stan.edytowanaCyfra, 1);
@@ -292,5 +300,4 @@ window.addEventListener('keydown', event => {
   if (event.key in mapaKlawiszy) { event.preventDefault(); wcisnijPrzycisk(mapaKlawiszy[event.key]); }
   if (event.key.toLowerCase() === 'r') resetSymulatora();
 });
-setInterval(() => { if (stan.program === 2 && stan.trybEdycji) wyswietlProgram(); }, 500);
 resetSymulatora();

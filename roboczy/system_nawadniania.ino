@@ -63,8 +63,12 @@ void drukuj_dzien_tygodnia(int dzien){
 }
 
 void drukuj_cyfre(int cyfra, int indeks){
-  if(tryb_edycji && edytowana_cyfra==indeks && (millis()/500)%2==0) lcd.print(" ");
-  else lcd.print(cyfra);
+  lcd.print(cyfra);
+}
+
+int kolumna_cyfry(int indeks){
+  int kolumny[7]={0,1,3,4,8,9,10};
+  return kolumny[indeks];
 }
 
 void ustaw_cyfre_harmonogramu(int dzien, int indeks, int zmiana){
@@ -144,9 +148,10 @@ void loop(){
                     int h=godzina_podlewania[wybrany_ekran]; int m=minuta_startu[wybrany_ekran]; int t=czas_podlewania_dnia[wybrany_ekran];
                     int cyfry[7]={h/10,h%10,m/10,m%10,(t/100)%10,(t/10)%10,t%10};
                     lcd.setCursor(0,1);drukuj_cyfre(cyfry[0],0);drukuj_cyfre(cyfry[1],1);lcd.print(":");drukuj_cyfre(cyfry[2],2);drukuj_cyfre(cyfry[3],3);lcd.print(" / ");drukuj_cyfre(cyfry[4],4);drukuj_cyfre(cyfry[5],5);drukuj_cyfre(cyfry[6],6);lcd.print("min");
+                    if(tryb_edycji){lcd.setCursor(kolumna_cyfry(edytowana_cyfra),1);lcd.blink();}else lcd.noBlink();
                  }
   if(program==2 && wybrany_ekran==8){ lcd.setCursor(0,0);lcd.print("Prog zalacz.: ");
-                    lcd.setCursor(0,1);if(tryb_edycji && (millis()/500)%2==0) lcd.print("  ");else lcd.print(prog_wilgotnosci);lcd.write(byte(0));lcd.print(" wilg.");
+                    lcd.setCursor(0,1);lcd.print(prog_wilgotnosci);lcd.write(byte(0));lcd.print(" wilg.");if(tryb_edycji){lcd.setCursor(0,1);lcd.blink();}else lcd.noBlink();
                  }
   if(program==5){   lcd.setCursor(0,0);lcd.print("Prog wilg: ");lcd.print(prog_wilgotnosci);lcd.write(byte(0));lcd.print("  "); }
   if(program==6){   digitalWrite(pin_przekaznik_podlewania, LOW);lcd.setCursor(0,0);lcd.print("Napelnianie A2 ");
@@ -161,6 +166,8 @@ void loop(){
 
 //------------obsługa przycisków z arduino LCD shield: -----------------------------------
     adc_0 = analogRead(0);                                              //odczyt ADC z wejścia przycisków A0
+    if (adc_0 < 50 && millis()-czas_DS>250)  {czas_DS=millis();lcd.clear();if(program==2 && tryb_edycji && wybrany_ekran<=7){edytowana_cyfra++;if(edytowana_cyfra>6) edytowana_cyfra=0;}} //RIGHT - następna cyfra
+    if (adc_0 >= 450 && adc_0 < 650 && millis()-czas_DS>250)  {czas_DS=millis();lcd.clear();if(program==2 && tryb_edycji && wybrany_ekran<=7){edytowana_cyfra--;if(edytowana_cyfra<0) edytowana_cyfra=6;}} //LEFT - poprzednia cyfra
     if (adc_0 >= 50 && adc_0 < 250 && millis()-czas_DS>200)  {
       czas_DS=millis();
       if(program==2 && !tryb_edycji){wybrany_ekran++;if(wybrany_ekran>8) wybrany_ekran=1;}
@@ -183,9 +190,8 @@ void loop(){
       czas_DS=millis();lcd.clear();
       if(program!=2){program=2;wybrany_ekran=1;tryb_edycji=false;edytowana_cyfra=-1;}
       else if(!tryb_edycji){tryb_edycji=true;edytowana_cyfra=0;}
-      else if(wybrany_ekran<=7 && edytowana_cyfra<6){edytowana_cyfra++;}
       else{tryb_edycji=false;edytowana_cyfra=-1;}
-    } //SELECT - cyfry / zatwierdzenie
+    } //SELECT - edycja / zatwierdzenie
 //-------------koniec obsługi przycisków z arduino LCD shield---------------------------------
 }
 //koniec pętli głównej programu
