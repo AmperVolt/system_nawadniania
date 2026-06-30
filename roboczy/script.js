@@ -172,7 +172,7 @@ function ustawCyfreProgu(indeks, zmiana) {
   if (prog > 99) prog = zmiana > 0 ? 0 : 99;
   stan.progWilgotnosci = prog;
 }
-function liniaCzasuRtc() { return `${dzienSkrot(stan.dzien).padEnd(4, ' ')} ${dwa(stan.godzina)}:${dwa(stan.minuta)}`; }
+function liniaCzasuRtc() { return `${dwa(stan.godzina)}:${dwa(stan.minuta)} / ${dzienSkrot(stan.dzien)}`; }
 function skopiujRtcDoUstawienCzasu() {
   stan.godzinyPodlewania[0] = stan.godzina;
   stan.minutyStartu[0] = stan.minuta;
@@ -184,12 +184,12 @@ function skopiujUstawieniaCzasuDoRtc() {
   synchronizujSuwakiZCzasem();
 }
 function ustawCyfreRtc(indeks, zmiana) {
-  if (indeks === 0) stan.dzien = zmiana > 0 ? (stan.dzien >= 7 ? 1 : stan.dzien + 1) : (stan.dzien <= 1 ? 7 : stan.dzien - 1);
-  if (indeks >= 1) {
+  if (indeks <= 3) {
     skopiujRtcDoUstawienCzasu();
-    ustawCyfreUstawien(0, indeks - 1, zmiana);
+    ustawCyfreUstawien(0, indeks, zmiana);
     skopiujUstawieniaCzasuDoRtc();
   }
+  if (indeks === 4) stan.dzien = zmiana > 0 ? (stan.dzien >= 7 ? 1 : stan.dzien + 1) : (stan.dzien <= 1 ? 7 : stan.dzien - 1);
   synchronizujSuwakiZCzasem();
 }
 function walidujCzasRtc() {
@@ -198,9 +198,9 @@ function walidujCzasRtc() {
   skopiujUstawieniaCzasuDoRtc();
 }
 function grupaCyfryRtc(indeks) {
-  if (indeks === 0) return 'dzien';
-  if (indeks <= 2) return 'godzina';
-  return 'minuta';
+  if (indeks <= 1) return 'godzina';
+  if (indeks <= 3) return 'minuta';
+  return 'dzien';
 }
 function przesunEdytowanaCyfreRtc(kierunek) {
   const poprzednia = stan.edytowanaCyfra;
@@ -212,7 +212,7 @@ function podswietlEdytowanaCyfre() {
   if (!stan.trybEdycji) return;
   if (stan.wybranyEkran <= 7) lcd.podswietl([0, 1, 3, 4, 8, 9, 10, 11][stan.edytowanaCyfra], 1);
   if (stan.wybranyEkran === 8) lcd.podswietl([0, 1][stan.edytowanaCyfra], 1);
-  if (stan.wybranyEkran === 9) lcd.podswietl([0, 5, 6, 8, 9][stan.edytowanaCyfra], 1);
+  if (stan.wybranyEkran === 9) lcd.podswietl([0, 1, 3, 4, 8][stan.edytowanaCyfra], 1);
 }
 function synchronizujCzasZSuwakow() {
   stan.dzien = Number(dzienAktualny.value);
