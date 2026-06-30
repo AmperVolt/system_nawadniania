@@ -71,6 +71,10 @@ void drukuj_napelnianie(){
   lcd.print("Nape");lcd.write(byte(2));lcd.print("nianie");
 }
 
+void drukuj_gotowy(){
+  lcd.print("Gotowy");
+}
+
 void drukuj_aktualny_dzien(){
   lcd.print("Aktualny dzie");lcd.write(byte(5));lcd.print(":");
 }
@@ -283,7 +287,7 @@ void loop(){
 //----------poniżej obsługa programów sterownika---------------
   if(program==0){   digitalWrite(pin_przekaznik_podlewania, LOW);
                     digitalWrite(pin_przekaznik_napelniania, LOW);
-                    wyczysc_linie(1);
+                    wyczysc_linie(1);lcd.setCursor(5,1);drukuj_gotowy();
                     if(aktualna_godzina==godzina_podlewania[aktualny_dzien] && aktualna_minuta==minuta_startu[aktualny_dzien] && pomiar_wilgotnosci<prog_wilgotnosci && digitalRead(pin_poziom_pusty)==HIGH && (ostatni_start_dzien!=aktualny_dzien || ostatni_start_godzina!=aktualna_godzina || ostatni_start_minuta!=aktualna_minuta)){
                       lcd.clear();czas_podlewania_min=czas_podlewania_dnia[aktualny_dzien];czas_startu_podlewania=millis();ostatni_start_dzien=aktualny_dzien;ostatni_start_godzina=aktualna_godzina;ostatni_start_minuta=aktualna_minuta;program=1;
                     }
@@ -314,7 +318,7 @@ void loop(){
                     lcd.setCursor(0,1);if(godzina_rtc_ekran<10) lcd.print("0");lcd.print(godzina_rtc_ekran);lcd.print(":");if(minuta_rtc_ekran<10) lcd.print("0");lcd.print(minuta_rtc_ekran);lcd.print(" / ");if(miganie_dnia) lcd.print("    "); else drukuj_dzien_tygodnia_stale(aktualny_dzien);lcd.print("   ");if(tryb_edycji && edytowana_cyfra<4){lcd.setCursor(kolumna_cyfry_rtc(edytowana_cyfra),1);lcd.blink();}else lcd.noBlink();
                   }
   if(program==5){   lcd.setCursor(0,0);lcd.print("Pr");lcd.write(byte(3));lcd.print("g wilg: ");lcd.print(prog_wilgotnosci);lcd.write(byte(0));lcd.print("  "); }
-  if(program==6){   digitalWrite(pin_przekaznik_podlewania, LOW);wyczysc_linie(1);lcd.setCursor(0,1);drukuj_napelnianie();
+  if(program==6){   digitalWrite(pin_przekaznik_podlewania, LOW);wyczysc_linie(1);lcd.setCursor(2,1);drukuj_napelnianie();
                     if(digitalRead(pin_stop)==LOW){digitalWrite(pin_przekaznik_napelniania, LOW);lcd.clear();program=0;}
                     else if(digitalRead(pin_poziom_pelny)==HIGH){digitalWrite(pin_przekaznik_napelniania, HIGH);}
                     else{digitalWrite(pin_przekaznik_napelniania, LOW);lcd.clear();program=0;}

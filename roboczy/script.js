@@ -80,6 +80,8 @@ const wartosciAdc = { RIGHT: 0, UP: 144, DOWN: 329, LEFT: 504, SELECT: 741, NONE
 const skrotyDni = ['', 'Pon.', 'Wt.', 'Śr.', 'Czw.', 'Pt.', 'Sob.', 'Nd.'];
 const dzienAktualny = document.getElementById('dzienAktualny');
 const aktualnyCzas = document.getElementById('aktualnyCzas');
+const przelaczCzas = document.getElementById('przelaczCzas');
+const mnoznikCzasu = document.getElementById('mnoznikCzasu');
 const nazwyProgramow = ['AUTO', 'PODLEWANIE', 'DZ. PODL.', 'GODZ. PODL.', 'CZAS PODL.', 'PRÓG', 'NAPEŁNIANIE', 'DZ. AKT.', 'GODZ. AKT.', 'MIN. AKT.'];
 const PROGRAM_PODLEWANIE = 1;
 const PROGRAM_NAPELNIANIE = 6;
@@ -106,7 +108,8 @@ const stan = {
   pompa: false,
   napelnianie: false,
   ostatniPrzycisk: 'NONE',
-  ostatniStart: ''
+  ostatniStart: '',
+  zegarDziala: false
 };
 
 function dwa(liczba) { return String(liczba).padStart(2, '0'); }
@@ -114,6 +117,10 @@ function czasNaMinuty(godzina, minuta) { return godzina * 60 + minuta; }
 function tekstCzasuZMinut(minuty) { return `${dwa(Math.floor(minuty / 60))}:${dwa(minuty % 60)}`; }
 function dzienSkrot(dzien) { return skrotyDni[Number(dzien)] || `D${dzien}`; }
 function lcdLinia(tekst) { return String(tekst).padEnd(16, ' ').slice(0, 16); }
+function wysrodkuj(tekst) {
+  const napis = String(tekst).slice(0, 16);
+  return `${' '.repeat(Math.floor((16 - napis.length) / 2))}${napis}`;
+}
 function aktualnyPoziomWody() { return Number(poziomWody.value); }
 function czujnikPelny() { return aktualnyPoziomWody() >= 100; }
 function czujnikPusty() { return aktualnyPoziomWody() <= 0; }
@@ -242,6 +249,7 @@ function odswiezOpisySuwakow() {
   document.getElementById('opisPoziomuWody').textContent = `${poziomWody.value}%`;
   document.getElementById('opisDniaAktualnego').textContent = dzienSkrot(dzienAktualny.value);
   document.getElementById('opisAktualnegoCzasu').textContent = tekstCzasuZMinut(Number(aktualnyCzas.value));
+  document.getElementById('opisMnoznikaCzasu').textContent = `×${mnoznikCzasu.value}`;
 }
 
 function drukuj(wiersz0, wiersz1) {
@@ -267,12 +275,12 @@ function liniaPodlewania() {
 }
 
 function wyswietlProgram() {
-  if (stan.program === 0) drukuj(liniaProcesuGorna(), '');
+  if (stan.program === 0) drukuj(liniaProcesuGorna(), wysrodkuj('Gotowy'));
   if (stan.program === PROGRAM_PODLEWANIE) drukuj(liniaProcesuGorna(), liniaPodlewania());
   if (stan.program === 2 && stan.wybranyEkran <= 7) { drukuj(`Ustawienia: ${dzienSkrot(stan.wybranyEkran)}`, liniaUstawienDnia(stan.wybranyEkran)); podswietlEdytowanaCyfre(); }
   if (stan.program === 2 && stan.wybranyEkran === 8) { drukuj('Próg załącz.:', `${cyfryProgu()}% wilg.`); podswietlEdytowanaCyfre(); }
   if (stan.program === 2 && stan.wybranyEkran === 9) { drukuj('Czas RTC:', liniaCzasuRtc()); podswietlEdytowanaCyfre(); }
-  if (stan.program === PROGRAM_NAPELNIANIE) drukuj(liniaProcesuGorna(), 'Napełnianie');
+  if (stan.program === PROGRAM_NAPELNIANIE) drukuj(liniaProcesuGorna(), wysrodkuj('Napełnianie'));
   if (stan.program === 7) drukuj('Aktualny dzień:', `${dzienSkrot(stan.dzien)}  UP/DOWN`);
   if (stan.program === 8) drukuj('Aktualna godz:', `${dwa(stan.godzina)}:${dwa(stan.minuta)}`);
   if (stan.program === 9) drukuj('Aktualna min:', `${dwa(stan.godzina)}:${dwa(stan.minuta)}`);
@@ -293,6 +301,9 @@ function aktualizujStatus() {
   document.getElementById('woda').style.height = `${poziomWody.value}%`;
   document.getElementById('wodaOpis').textContent = `${poziomWody.value}%`;
   document.getElementById('stanCzasu').textContent = `${dzienSkrot(stan.dzien)} ${dwa(stan.godzina)}:${dwa(stan.minuta)}`;
+  document.getElementById('stanZegara').textContent = `${stan.zegarDziala ? 'PLAY' : 'PAUZA'} ×${mnoznikCzasu.value}`;
+  przelaczCzas.textContent = stan.zegarDziala ? 'PAUZA' : 'PLAY';
+  przelaczCzas.classList.toggle('aktywny', stan.zegarDziala);
   odswiezOpisySuwakow();
 }
 
@@ -313,6 +324,15 @@ function zatrzymajProces() {
   stan.pompa = false;
   stan.napelnianie = false;
   stan.startPodlewaniaMinuty = null;
+}
+
+function przesunCzasSymulacji(minuty) {
+  const tydzien = 7 * 1440;
+  const aktualny = (Number(dzienAktualny.value) - 1) * 1440 + Number(aktualnyCzas.value);
+  const nowy = (aktualny + minuty + tydzien) % tydzien;
+  dzienAktualny.value = Math.floor(nowy / 1440) + 1;
+  aktualnyCzas.value = nowy % 1440;
+  logikaSterownika();
 }
 
 function logikaSterownika() {
@@ -408,16 +428,19 @@ function wcisnijPrzycisk(przycisk) {
 }
 
 function resetSymulatora() {
-  Object.assign(stan, { program: 0, wybranyEkran: 1, trybEdycji: false, edytowanePole: 'godzina', edytowanaCyfra: -1, minutyStartu: [0, 0, 0, 0, 0, 0, 0, 0], godzinyPodlewania: [0, 6, 6, 6, 6, 6, 6, 6], czasyPodlewania: [0, 15, 15, 15, 15, 15, 15, 15], dzienPodlewania: 1, godzinaPodlewania: 6, czasPodlewania: 15, progWilgotnosci: 45, dzien: 1, godzina: 6, minuta: 0, minutyPodlewania: 0, pompa: false, napelnianie: false, startPodlewaniaMinuty: null, ostatniPrzycisk: 'NONE', ostatniStart: '' });
+  Object.assign(stan, { program: 0, wybranyEkran: 1, trybEdycji: false, edytowanePole: 'godzina', edytowanaCyfra: -1, minutyStartu: [0, 0, 0, 0, 0, 0, 0, 0], godzinyPodlewania: [0, 6, 6, 6, 6, 6, 6, 6], czasyPodlewania: [0, 15, 15, 15, 15, 15, 15, 15], dzienPodlewania: 1, godzinaPodlewania: 6, czasPodlewania: 15, progWilgotnosci: 45, dzien: 1, godzina: 6, minuta: 0, minutyPodlewania: 0, pompa: false, napelnianie: false, startPodlewaniaMinuty: null, ostatniPrzycisk: 'NONE', ostatniStart: '', zegarDziala: false });
   wilgotnosc.value = 35;
   poziomWody.value = 35;
   dzienAktualny.value = 1;
   aktualnyCzas.value = 360;
+  mnoznikCzasu.value = 1;
   logikaSterownika();
 }
 
 document.querySelectorAll('[data-przycisk]').forEach(btn => btn.addEventListener('click', () => wcisnijPrzycisk(btn.dataset.przycisk)));
 document.getElementById('reset').addEventListener('click', resetSymulatora);
+przelaczCzas.addEventListener('click', () => { stan.zegarDziala = !stan.zegarDziala; logikaSterownika(); });
+mnoznikCzasu.addEventListener('change', logikaSterownika);
 document.getElementById('stopAwaryjny').addEventListener('click', () => {
   stan.ostatniPrzycisk = 'STOP D2';
   zatrzymajProces();
@@ -431,5 +454,7 @@ window.addEventListener('keydown', event => {
   const mapaKlawiszy = { ArrowUp: 'UP', ArrowDown: 'DOWN', ArrowLeft: 'LEFT', ArrowRight: 'RIGHT', Enter: 'SELECT' };
   if (event.key in mapaKlawiszy) { event.preventDefault(); wcisnijPrzycisk(mapaKlawiszy[event.key]); }
   if (event.key.toLowerCase() === 'r') resetSymulatora();
+  if (event.key === ' ') { event.preventDefault(); stan.zegarDziala = !stan.zegarDziala; logikaSterownika(); }
 });
+setInterval(() => { if (stan.zegarDziala) przesunCzasSymulacji(Number(mnoznikCzasu.value)); }, 1000);
 resetSymulatora();
