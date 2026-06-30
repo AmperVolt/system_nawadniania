@@ -89,7 +89,7 @@ const PIERWSZY_EKRAN_KONFIG = 2;
 const OSTATNI_EKRAN_KONFIG = 9;
 let ostatniTickZegara = Date.now();
 let akumulatorZegaraMs = 0;
-const MINUTA_SYMULACJI_MS = 60000;
+const MINUTA_SYMULACJI_MS = 1000;
 const OKRES_ZEGARA_MS = 250;
 const stan = {
   program: 0,
