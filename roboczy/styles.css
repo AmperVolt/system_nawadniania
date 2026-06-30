@@ -22,6 +22,11 @@ body { margin: 0; min-height: 100vh; font-family: system-ui, -apple-system, Blin
 .lcd-rama { position: relative; z-index: 2; margin: 16px auto 24px; width: min(100%, 520px); background: var(--lcd-rama); border-radius: 16px; padding: 18px; box-shadow: inset 0 0 0 3px rgba(255,255,255,0.08), 0 14px 30px rgba(0,0,0,0.28); }
 .lcd { background: var(--lcd-tlo); border-radius: 10px; padding: 14px; box-shadow: inset 0 0 22px rgba(0,0,0,0.55); display: grid; gap: 7px; }
 .wiersz { display: grid; grid-template-columns: repeat(16, 1fr); gap: 3px; }
+.znak.podswietlony { animation: miganie-cyfry 0.8s steps(1, end) infinite; }
+@keyframes miganie-cyfry {
+  0%, 49% { background: #e0f2fe; color: #164e63; text-shadow: none; box-shadow: 0 0 10px rgba(224,242,254,0.75); }
+  50%, 100% { background: var(--lcd-komorka); color: var(--lcd-tekst); text-shadow: 0 0 8px rgba(224,242,254,0.55); box-shadow: none; }
+}
 .znak { aspect-ratio: 0.68 / 1; min-width: 0; display: grid; place-items: center; border-radius: 3px; background: var(--lcd-komorka); color: var(--lcd-tekst); font-family: "Courier New", Consolas, monospace; font-size: clamp(18px, 4vw, 28px); font-weight: 700; line-height: 1; text-shadow: 0 0 8px rgba(224,242,254,0.55); user-select: none; }
 .podpis-lcd { text-align: center; margin-top: 10px; color: #bae6fd; font-size: 13px; }
 .przyciski { position: relative; z-index: 2; display: grid; grid-template-columns: repeat(3, 82px); grid-template-rows: repeat(3, 52px); gap: 10px; justify-content: center; align-items: center; margin-bottom: 14px; }
@@ -48,12 +53,12 @@ input { width: 100%; accent-color: #0ea5e9; }
 .plywak strong { color: #22c55e; font-family: "Courier New", monospace; }
 .plywak.alarm strong { color: #f87171; }
 .zbiornik { position: relative; height: 150px; margin-top: 14px; border: 4px solid rgba(255,255,255,0.35); border-radius: 16px; overflow: hidden; background: #020617; }
-#linia20, #linia5 { position: absolute; left: 0; right: 0; z-index: 3; border-top: 2px dashed rgba(255,255,255,0.72); }
-#linia20 { bottom: 20%; }
-#linia5 { bottom: 5%; border-top-color: rgba(248,113,113,0.85); }
-#linia20::after, #linia5::after { position: absolute; right: 8px; top: -18px; font: 700 12px "Courier New", monospace; color: white; text-shadow: 0 1px 4px #020617; }
-#linia20::after { content: "20%"; }
-#linia5::after { content: "5%"; color: #fecaca; }
+#liniaPelny, #liniaPusty { position: absolute; left: 0; right: 0; z-index: 3; border-top: 2px dashed rgba(255,255,255,0.72); }
+#liniaPelny { top: 0; }
+#liniaPusty { bottom: 0; border-top-color: rgba(248,113,113,0.85); }
+#liniaPelny::after, #liniaPusty::after { position: absolute; right: 8px; top: -18px; font: 700 12px "Courier New", monospace; color: white; text-shadow: 0 1px 4px #020617; }
+#liniaPelny::after { content: "PEŁNY"; top: 4px; }
+#liniaPusty::after { content: "PUSTY"; color: #fecaca; }
 #woda { position: absolute; left: 0; right: 0; bottom: 0; height: 100%; background: linear-gradient(180deg, #38bdf8, #0369a1); transition: height 0.2s; }
 #wodaOpis { position: absolute; inset: 0; display: grid; place-items: center; font-family: "Courier New", monospace; font-size: 28px; font-weight: 900; text-shadow: 0 2px 8px #020617; }
 .pomoc { margin-top: 14px; color: var(--muted); font-size: 14px; line-height: 1.5; }

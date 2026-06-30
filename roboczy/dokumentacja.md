@@ -3,27 +3,32 @@
 ## Lista elementów
 - Arduino Mega 2560.
 - Wyświetlacz LCD 16x2 zgodny z biblioteką `LiquidCrystal`.
+- Moduł RTC DS3231 obsługiwany przez `Wire.h` i `DS3231.h` (`DS3231 rtc;`).
 - Czujnik wilgotności gleby M335 z wyjściem analogowym 0-3 V.
-- Dwa pływakowe czujniki poziomu wody: 5% oraz 20%.
-- Przekaźnik do sterowania pompą wody albo silnikiem DC symulującym pompę.
-- Przycisk STOP, przewody i zasilanie dobrane do pompy.
+- Dwa pływakowe czujniki poziomu wody: PUSTY oraz PEŁNY.
+- Przekaźnik pompy podlewania oraz drugi przekaźnik do napełniania zbiornika wodą.
+- Przycisk STOP, przewody i zasilanie dobrane do pomp/przekaźników.
 
 ## Schemat połączeń
 | Element | Pin Arduino Mega 2560 | Uwagi |
 | --- | --- | --- |
 | LCD RS, E, D4, D5, D6, D7 | D8, D9, D4, D5, D6, D7 | jak w pliku stylu |
 | Przycisk STOP | D2 | wejście z `INPUT` i podciągnięciem `PULLUP` |
-| Czujnik poziomu 5% | A1 | użyty jako wejście cyfrowe |
-| Czujnik poziomu 20% | A3 | użyty jako wejście cyfrowe |
+| Czujnik poziomu PUSTY | A1 | użyty jako wejście cyfrowe |
+| Czujnik poziomu PEŁNY | A3 | użyty jako wejście cyfrowe |
 | Czujnik wilgotności M335 | A4 | wejście analogowe 0-3 V |
-| Przekaźnik pompy | A2 | wyjście cyfrowe |
+| Przekaźnik pompy podlewania | A5 | wyjście cyfrowe |
+| Przekaźnik napełniania zbiornika | A2 | drugie wyjście cyfrowe do dolewania wody |
 | Klawiatura LCD shield | A0 | odczyt przycisków przez dzielnik rezystorowy |
+| RTC DS3231 | SDA/SCL (Mega: D20/D21) | zegar czasu rzeczywistego po I2C (`Wire.h`, `DS3231.h`) |
 
-W założeniach projektu pin A4 występuje jednocześnie dla przekaźnika i analogowego czujnika wilgotności. Ponieważ jeden pin nie może w tym samym czasie mierzyć analogowo i sterować przekaźnikiem, w programie pozostawiono A4 dla czujnika M335, a przekaźnik przeniesiono na A2.
+Pin A4 pozostaje wejściem analogowym czujnika wilgotności M335. Przekaźnik napełniania zbiornika jest podłączony do A2, a przekaźnik pompy podlewania do wolnego pinu A5.
 
 ## Opis działania
-Sterownik pracuje na podstawie harmonogramu: użytkownik ustawia dzień podlewania, godzinę rozpoczęcia oraz próg wilgotności gleby. Program sprawdza, czy aktualny dzień i godzina zgadzają się z nastawami, a wilgotność jest mniejsza od progu.
+Sterownik pracuje na podstawie harmonogramu tygodniowego: użytkownik przełącza dni skrótami (Pon., Wt., Śr., Czw., Pt., Sob., Nd.), ustawia dla każdego dnia godzinę rozpoczęcia i czas podlewania w minutach (do 1440 min), po niedzieli ustawia próg wilgotności gleby maksymalnie 99%, a w ostatnim oknie ustawia czas RTC w układzie `HH:MM / dzień` zapisywany do DS3231; cyfry `HH:MM` są edytowane tą samą ścieżką co godzina startu podlewania. UP/DOWN przełącza okna ustawień, SELECT rozpoczyna albo zatwierdza edycję, LEFT/RIGHT przesuwa migającą cyfrę, a w edycji UP/DOWN zmienia tę cyfrę. Podlewanie uruchamia się tylko wtedy, gdy aktualny dzień i godzina zgadzają się z harmonogramem, wilgotność gleby jest mniejsza od progu i zbiornik nie jest pusty.
 
-Podlewanie rozpocznie się tylko wtedy, gdy czujnik poziomu 20% potwierdzi wystarczającą ilość wody. Jeżeli w trakcie pracy poziom wody spadnie poniżej 5%, wciśnięty zostanie STOP albo wilgotność wzrośnie powyżej progu z histerezą 5%, pompa zostanie wyłączona. Progi wody 20% i 5% są wpisane na stałe.
+Podlewanie jest czasowe, domyślnie 15 minut. W trakcie podlewania działa przekaźnik pompy podlewania, a przekaźnik napełniania A2 pozostaje wyłączony. STOP na D2 albo sygnał PUSTY przerywa podlewanie. Po zakończeniu czasu podlewania, po STOP albo po wykryciu pustego zbiornika sterownik automatycznie przechodzi do napełniania zbiornika.
 
-Do symulacji dołączono pliki `index.html`, `styles.css` i `script.js`. Symulator pokazuje LCD Keypad Shield 16x2 z komórkami znaków, przyciskami RIGHT/UP/DOWN/LEFT/SELECT umieszczonymi wyłącznie na shieldzie, osobny czerwony przycisk STOP D2, czujniki pływakowe 20% i 5%, poziom wody, wilgotność gleby i stan pompy.
+Podczas napełniania działa drugi przekaźnik na A2. Napełnianie trwa do momentu załączenia czujnika PEŁNY, po czym sterownik wyłącza przekaźnik A2 i wraca do trybu AUTO. W symulatorze jeden suwak poziomu wody służy wyłącznie do ustawienia stanów cyfrowych PEŁNY/PUSTY; nie jest przeliczany na analogowy sygnał czujnika poziomu.
+
+Do symulacji dołączono pliki `index.html`, `styles.css` i `script.js`. Symulator nie zmienia poziomu wody automatycznie i reaguje tylko na suwaki oraz przyciski. Symulator pokazuje LCD Keypad Shield 16x2, osobny czerwony STOP D2, przekaźnik podlewania, przekaźnik napełniania A2, jeden suwak poziomu wody, cyfrowe stany PEŁNY/PUSTY, wilgotność gleby, nastawę czasu podlewania oraz okno ustawienia dnia i czasu RTC; edycja tego okna synchronizuje także suwaki dnia, godziny i minuty.

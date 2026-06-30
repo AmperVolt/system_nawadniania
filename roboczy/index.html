@@ -10,7 +10,7 @@
     <main class="calosc">
       <section class="naglowek">
         <h1>Symulator systemu nawadniania</h1>
-        <p>Arduino Mega 2560 + LCD Keypad Shield 16×2. Symulator nie przewija czasu automatycznie — wilgotność, stany pływaków oraz aktualny czas ustawiasz ręcznie.</p>
+        <p>Arduino Mega 2560 + LCD Keypad Shield 16×2. Symulator uruchamia podlewanie według harmonogramu i niskiej wilgotności, a po podlewaniu automatycznie napełnia zbiornik.</p>
       </section>
 
       <section class="uklad">
@@ -42,31 +42,38 @@
             <div class="linia-statusu"><span>Ostatni przycisk</span><span id="stanPrzycisku" class="wartosc">NONE</span></div>
             <div class="linia-statusu"><span>Symulowane analogRead(A0)</span><span id="stanAdc" class="wartosc">1023</span></div>
             <div class="linia-statusu"><span>Program sterownika</span><span id="stanProgramu" class="wartosc">AUTO</span></div>
-            <div class="linia-statusu"><span>Pompa</span><span id="stanPompy" class="wartosc">OFF</span></div>
-            <div class="linia-statusu"><span>Czujnik pływakowy 20%</span><span id="stanPlywak20" class="wartosc">OK</span></div>
-            <div class="linia-statusu"><span>Czujnik pływakowy 5%</span><span id="stanPlywak5" class="wartosc">OK</span></div>
-            <div class="linia-statusu"><span>Czas</span><span id="stanCzasu" class="wartosc">D1 06:00</span></div>
+            <div class="linia-statusu"><span>Przekaźnik podlewania</span><span id="stanPompy" class="wartosc">OFF</span></div>
+            <div class="linia-statusu"><span>Przekaźnik napełniania A2</span><span id="stanNapelniania" class="wartosc">OFF</span></div>
+            <div class="linia-statusu"><span>Czujnik PEŁNY</span><span id="stanPelny" class="wartosc">ROZŁ.</span></div>
+            <div class="linia-statusu"><span>Czujnik PUSTY</span><span id="stanPusty" class="wartosc">ROZŁ.</span></div>
+            <div class="linia-statusu"><span>Czas</span><span id="stanCzasu" class="wartosc">Pon. 06:00</span></div>
           </div>
 
           <h2>Czujniki i obiekt</h2>
           <label>Wilgotność gleby M335 <span id="opisWilgotnosci" class="wartosc-suwaka">35%</span><input id="wilgotnosc" type="range" min="0" max="100" value="35"></label>
-          <label>Pływak 20% / START <span id="opisSonda20" class="wartosc-suwaka">ZAŁ.</span><input id="sonda20" type="range" min="0" max="1" step="1" value="1"></label>
-          <label>Pływak 5% / STOP awaryjny <span id="opisSonda5" class="wartosc-suwaka">ZAŁ.</span><input id="sonda5" type="range" min="0" max="1" step="1" value="1"></label>
-          <div class="pomoc mala">Nie ma żadnego analogowego czujnika poziomu ani obliczania procentów wody. Te dwa suwaki ustawiają wyłącznie stany cyfrowych pływaków: ZAŁ. albo ROZŁ.</div>
+          <label>Poziom wody w zbiorniku <span id="opisPoziomuWody" class="wartosc-suwaka">35%</span><input id="poziomWody" type="range" min="0" max="100" value="35"></label>
+          <div class="zbiornik" aria-label="Wizualizacja poziomu wody i czujników pełny/pusty">
+            <div id="liniaPelny"></div>
+            <div id="liniaPusty"></div>
+            <div id="woda"></div>
+            <span id="wodaOpis">35%</span>
+          </div>
+          <div class="pomoc mala">Jeden suwak poziomu wody służy tylko do ustawienia stanów cyfrowych czujników PEŁNY/PUSTY. Symulator nie przelicza poziomu wody na żaden sygnał analogowy.</div>
 
           <h2>Czas ręczny</h2>
-          <label>Aktualny dzień tygodnia <span id="opisDniaAktualnego" class="wartosc-suwaka">D1</span><input id="dzienAktualny" type="range" min="1" max="7" value="1"></label>
+          <label>Aktualny dzień tygodnia <span id="opisDniaAktualnego" class="wartosc-suwaka">Pon.</span><input id="dzienAktualny" type="range" min="1" max="7" value="1"></label>
           <label>Aktualna godzina <span id="opisGodzinyAktualnej" class="wartosc-suwaka">06</span><input id="godzinaAktualna" type="range" min="0" max="23" value="6"></label>
           <label>Aktualna minuta <span id="opisMinutyAktualnej" class="wartosc-suwaka">00</span><input id="minutaAktualna" type="range" min="0" max="59" value="0"></label>
+          <label>Czas podlewania <span id="opisCzasuPodlewania" class="wartosc-suwaka">15 min</span><input id="czasPodlewania" type="range" min="1" max="1440" value="15"></label>
           <div class="plywaki" aria-label="Czujniki pływakowe poziomu wody">
-            <div class="plywak plywak-20"><span>pływak 20%</span><strong id="opisPlywak20">ZAŁ.</strong></div>
-            <div class="plywak plywak-5"><span>pływak 5%</span><strong id="opisPlywak5">ZAŁ.</strong></div>
+            <div class="plywak plywak-pelny"><span>pływak PEŁNY</span><strong id="opisPelny">ROZŁ.</strong></div>
+            <div class="plywak plywak-pusty"><span>pływak PUSTY</span><strong id="opisPusty">ROZŁ.</strong></div>
           </div>
           <button class="stop-awaryjny" id="stopAwaryjny" type="button">STOP podlewania D2</button>
 
           <div class="pomoc">
             Klawiatura: <kbd>↑</kbd> <kbd>↓</kbd> <kbd>←</kbd> <kbd>→</kbd>, <kbd>Enter</kbd> = SELECT, <kbd>R</kbd> = RESET.
-            SELECT otwiera konfigurację urządzenia i wraca do AUTO. W konfiguracji RIGHT przełącza nastawy, UP/DOWN zmienia wartość. Czerwony STOP symuluje fizyczny przycisk D2, a suwaki pływaków ustawiają tylko wejścia cyfrowe 20% i 5%.
+            SELECT otwiera ustawienia i zatwierdza edycję, LEFT/RIGHT przesuwa migającą cyfrę, a UP/DOWN zmienia jej wartość. Dostępnych jest 9 okien: 7 dni harmonogramu, próg wilgotności maks. 99% oraz czas RTC w układzie HH:MM / dzień; cyfry HH:MM RTC działają tak samo jak start podlewania. Symulator nie zmienia poziomu wody automatycznie — reaguje tylko na suwaki i przyciski.
           </div>
         </aside>
       </section>
