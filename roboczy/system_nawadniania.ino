@@ -57,8 +57,23 @@ int program=0;  //zmienna aktualnie realizowanego programu sterownika
 byte procent[8] ={B11001,B11010,B00100,B01000,B10110,B00110,B00000,B00000}; //znak procent
 byte s_z_kreska[8] ={B00010,B00100,B01110,B10000,B01110,B00001,B11110,B00000}; //polski znak: ś
 byte l_z_kreska[8] ={B01100,B00100,B00110,B00100,B01100,B00100,B01110,B00000}; //polski znak: ł
+byte o_z_kreska[8] ={B00010,B00100,B01110,B10001,B10001,B10001,B01110,B00000}; //polski znak: ó
+byte a_z_ogonkiem[8] ={B00000,B01110,B00001,B01111,B10001,B01111,B00010,B00001}; //polski znak: ą
+byte n_z_kreska[8] ={B00010,B00100,B10110,B11001,B10001,B10001,B10001,B00000}; //polski znak: ń
 //----------------------------------------------------------------------------
 
+
+void drukuj_prog_zalacz(){
+  lcd.print("Pr");lcd.write(byte(3));lcd.print("g za");lcd.write(byte(2));lcd.write(byte(4));lcd.print("cz.:");
+}
+
+void drukuj_napelnianie(){
+  lcd.print("Nape");lcd.write(byte(2));lcd.print("nianie A2 ");
+}
+
+void drukuj_aktualny_dzien(){
+  lcd.print("Aktualny dzie");lcd.write(byte(5));lcd.print(":");
+}
 
 void drukuj_dzien_tygodnia(int dzien){
   if(dzien==3){lcd.write(byte(1));lcd.print("r.");}
@@ -224,6 +239,9 @@ void setup(){
   lcd.createChar(0, procent);        //procent
   lcd.createChar(1, s_z_kreska);     //ś
   lcd.createChar(2, l_z_kreska);     //ł
+  lcd.createChar(3, o_z_kreska);     //ó
+  lcd.createChar(4, a_z_ogonkiem);   //ą
+  lcd.createChar(5, n_z_kreska);     //ń
   //-----------------------------------------------------------
 
   lcd.begin(16, 2);           //rozpoczęcie pracy wyświetlacza LCD
@@ -271,7 +289,7 @@ void loop(){
                     lcd.setCursor(0,1);drukuj_cyfre(cyfry[0],0);drukuj_cyfre(cyfry[1],1);lcd.print(":");drukuj_cyfre(cyfry[2],2);drukuj_cyfre(cyfry[3],3);lcd.print(" / ");drukuj_cyfre(cyfry[4],4);drukuj_cyfre(cyfry[5],5);drukuj_cyfre(cyfry[6],6);drukuj_cyfre(cyfry[7],7);lcd.print(" min");
                     if(tryb_edycji){lcd.setCursor(kolumna_cyfry(edytowana_cyfra),1);lcd.blink();}else lcd.noBlink();
                  }
-  if(program==2 && wybrany_ekran==8){ lcd.setCursor(0,0);lcd.print("Prog zalacz.: ");
+  if(program==2 && wybrany_ekran==8){ lcd.setCursor(0,0);drukuj_prog_zalacz();lcd.print(" ");
                     lcd.setCursor(0,1);if(prog_wilgotnosci<10) lcd.print("0");lcd.print(prog_wilgotnosci);lcd.write(byte(0));lcd.print(" wilg.");if(tryb_edycji){lcd.setCursor(kolumna_cyfry_progu(edytowana_cyfra),1);lcd.blink();}else lcd.noBlink();
                  }
   if(program==2 && wybrany_ekran==9){ lcd.setCursor(0,0);lcd.print("Czas RTC:       ");
@@ -280,12 +298,12 @@ void loop(){
                     bool miganie_dnia=tryb_edycji && edytowana_cyfra==4 && ((millis()/500)%2==0);
                     lcd.setCursor(0,1);if(godzina_rtc_ekran<10) lcd.print("0");lcd.print(godzina_rtc_ekran);lcd.print(":");if(minuta_rtc_ekran<10) lcd.print("0");lcd.print(minuta_rtc_ekran);lcd.print(" / ");if(miganie_dnia) lcd.print("    "); else drukuj_dzien_tygodnia_stale(aktualny_dzien);lcd.print("   ");if(tryb_edycji && edytowana_cyfra<4){lcd.setCursor(kolumna_cyfry_rtc(edytowana_cyfra),1);lcd.blink();}else lcd.noBlink();
                   }
-  if(program==5){   lcd.setCursor(0,0);lcd.print("Prog wilg: ");lcd.print(prog_wilgotnosci);lcd.write(byte(0));lcd.print("  "); }
-  if(program==6){   digitalWrite(pin_przekaznik_podlewania, LOW);lcd.setCursor(0,0);lcd.print("Napelnianie A2 ");
+  if(program==5){   lcd.setCursor(0,0);lcd.print("Pr");lcd.write(byte(3));lcd.print("g wilg: ");lcd.print(prog_wilgotnosci);lcd.write(byte(0));lcd.print("  "); }
+  if(program==6){   digitalWrite(pin_przekaznik_podlewania, LOW);lcd.setCursor(0,0);drukuj_napelnianie();
                     if(digitalRead(pin_poziom_pelny)==HIGH){digitalWrite(pin_przekaznik_napelniania, HIGH);}
                     else{digitalWrite(pin_przekaznik_napelniania, LOW);lcd.clear();program=0;}
                  }
-  if(program==7){   lcd.setCursor(0,0);lcd.print("Aktualny dzien:");drukuj_dzien_tygodnia(aktualny_dzien);lcd.print(" "); }
+  if(program==7){   lcd.setCursor(0,0);drukuj_aktualny_dzien();drukuj_dzien_tygodnia(aktualny_dzien);lcd.print(" "); }
   if(program==8){   lcd.setCursor(0,0);lcd.print("Aktualna godz:");if(aktualna_godzina<10) lcd.print("0");lcd.print(aktualna_godzina);lcd.print(" "); }
   if(program==9){   lcd.setCursor(0,0);lcd.print("Aktualna min: ");if(aktualna_minuta<10) lcd.print("0");lcd.print(aktualna_minuta);lcd.print(" "); }
 //----------koniec obsługi programów sterownika-----------------
@@ -297,7 +315,7 @@ void loop(){
     if (adc_0 >= 450 && adc_0 < 650 && millis()-czas_DS>250)  {czas_DS=millis();lcd.clear();if(program==2 && tryb_edycji && wybrany_ekran<=7){przesun_edytowana_cyfre(-1);}else if(program==2 && tryb_edycji && wybrany_ekran==8){edytowana_cyfra--;if(edytowana_cyfra<0) edytowana_cyfra=1;}else if(program==2 && tryb_edycji && wybrany_ekran==9) przesun_edytowana_cyfre_rtc(-1);} //LEFT - poprzednia cyfra
     if (adc_0 >= 50 && adc_0 < 250 && millis()-czas_DS>200)  {
       czas_DS=millis();
-      if(program==2 && !tryb_edycji){wybrany_ekran++;if(wybrany_ekran>9) wybrany_ekran=1;}
+      if(program==2 && !tryb_edycji){wybrany_ekran++;if(wybrany_ekran>9){program=0;wybrany_ekran=1;lcd.noBlink();}}
       else if(program==2 && tryb_edycji && wybrany_ekran<=7) ustaw_cyfre_harmonogramu(wybrany_ekran, edytowana_cyfra, 1);
       else if(program==2 && tryb_edycji && wybrany_ekran==8) ustaw_cyfre_progu(edytowana_cyfra,1);
       else if(program==2 && tryb_edycji && wybrany_ekran==9) ustaw_cyfre_rtc(edytowana_cyfra,1);
@@ -307,7 +325,7 @@ void loop(){
     }
     if (adc_0 >= 250 && adc_0 < 450 && millis()-czas_DS>200)  {
       czas_DS=millis();
-      if(program==2 && !tryb_edycji){wybrany_ekran--;if(wybrany_ekran<1) wybrany_ekran=9;}
+      if(program==2 && !tryb_edycji){wybrany_ekran--;if(wybrany_ekran<1){program=0;wybrany_ekran=1;lcd.noBlink();}}
       else if(program==2 && tryb_edycji && wybrany_ekran<=7) ustaw_cyfre_harmonogramu(wybrany_ekran, edytowana_cyfra, -1);
       else if(program==2 && tryb_edycji && wybrany_ekran==8) ustaw_cyfre_progu(edytowana_cyfra,-1);
       else if(program==2 && tryb_edycji && wybrany_ekran==9) ustaw_cyfre_rtc(edytowana_cyfra,-1);
