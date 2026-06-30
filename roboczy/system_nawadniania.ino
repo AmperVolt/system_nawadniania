@@ -279,7 +279,10 @@ void loop(){
   if(program==1){   lcd.setCursor(0,0);lcd.print("Podlewanie D2 ");
                     digitalWrite(pin_przekaznik_podlewania, HIGH);
                     digitalWrite(pin_przekaznik_napelniania, LOW);
-                    if(digitalRead(pin_stop)==LOW || digitalRead(pin_poziom_pusty)==LOW || millis()-czas_startu_podlewania>=czas_podlewania_min*60000UL){
+                    if(digitalRead(pin_stop)==LOW){
+                      digitalWrite(pin_przekaznik_podlewania, LOW);lcd.clear();program=0;
+                    }
+                    else if(digitalRead(pin_poziom_pusty)==LOW || millis()-czas_startu_podlewania>=czas_podlewania_min*60000UL){
                       digitalWrite(pin_przekaznik_podlewania, LOW);lcd.clear();program=6;
                     }
                  }
@@ -300,7 +303,8 @@ void loop(){
                   }
   if(program==5){   lcd.setCursor(0,0);lcd.print("Pr");lcd.write(byte(3));lcd.print("g wilg: ");lcd.print(prog_wilgotnosci);lcd.write(byte(0));lcd.print("  "); }
   if(program==6){   digitalWrite(pin_przekaznik_podlewania, LOW);lcd.setCursor(0,0);drukuj_napelnianie();
-                    if(digitalRead(pin_poziom_pelny)==HIGH){digitalWrite(pin_przekaznik_napelniania, HIGH);}
+                    if(digitalRead(pin_stop)==LOW){digitalWrite(pin_przekaznik_napelniania, LOW);lcd.clear();program=0;}
+                    else if(digitalRead(pin_poziom_pelny)==HIGH){digitalWrite(pin_przekaznik_napelniania, HIGH);}
                     else{digitalWrite(pin_przekaznik_napelniania, LOW);lcd.clear();program=0;}
                  }
   if(program==7){   lcd.setCursor(0,0);drukuj_aktualny_dzien();drukuj_dzien_tygodnia(aktualny_dzien);lcd.print(" "); }

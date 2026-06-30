@@ -76,7 +76,6 @@ class LCD16x2 {
 const lcd = new LCD16x2('lcd');
 const wilgotnosc = document.getElementById('wilgotnosc');
 const poziomWody = document.getElementById('poziomWody');
-const czasPodlewania = document.getElementById('czasPodlewania');
 const wartosciAdc = { RIGHT: 0, UP: 144, DOWN: 329, LEFT: 504, SELECT: 741, NONE: 1023, 'STOP D2': 'D2' };
 const skrotyDni = ['', 'Pon.', 'Wt.', 'Śr.', 'Czw.', 'Pt.', 'Sob.', 'Nd.'];
 const dzienAktualny = document.getElementById('dzienAktualny');
@@ -99,6 +98,7 @@ const stan = {
   dzienPodlewania: 1,
   godzinaPodlewania: 6,
   czasPodlewania: 15,
+  startPodlewaniaMinuty: null,
   progWilgotnosci: 45,
   dzien: 1,
   godzina: 6,
@@ -118,6 +118,12 @@ function czujnikPelny() { return aktualnyPoziomWody() >= 100; }
 function czujnikPusty() { return aktualnyPoziomWody() <= 0; }
 function opisPlywaka(stanPlywaka) { return stanPlywaka ? 'ZAŁ.' : 'ROZŁ.'; }
 function kluczCzasu() { return `D${stan.dzien}-${stan.godzina}-${stan.minuta}`; }
+function aktualnyCzasWMinutach() { return (stan.dzien - 1) * 1440 + stan.godzina * 60 + stan.minuta; }
+function minutyOdStartuPodlewania() {
+  if (stan.startPodlewaniaMinuty === null) return 0;
+  const tydzien = 7 * 1440;
+  return (aktualnyCzasWMinutach() - stan.startPodlewaniaMinuty + tydzien) % tydzien;
+}
 function godzinaDnia(dzien) { return stan.godzinyPodlewania[Number(dzien)] || 0; }
 function minutaDnia(dzien) { return stan.minutyStartu[Number(dzien)] || 0; }
 function czasDnia(dzien) { return stan.czasyPodlewania[Number(dzien)] ?? 1; }
@@ -233,8 +239,6 @@ function ustawPoziomWody(wartosc) { poziomWody.value = Math.max(0, Math.min(100,
 function odswiezOpisySuwakow() {
   document.getElementById('opisWilgotnosci').textContent = `${wilgotnosc.value}%`;
   document.getElementById('opisPoziomuWody').textContent = `${poziomWody.value}%`;
-  if (stan.wybranyEkran <= 7) czasPodlewania.value = czasDnia(stan.wybranyEkran);
-  document.getElementById('opisCzasuPodlewania').textContent = `${czasPodlewania.value} min`;
   document.getElementById('opisDniaAktualnego').textContent = dzienSkrot(dzienAktualny.value);
   document.getElementById('opisGodzinyAktualnej').textContent = dwa(godzinaAktualna.value);
   document.getElementById('opisMinutyAktualnej').textContent = dwa(minutaAktualna.value);
@@ -280,18 +284,26 @@ function aktualizujStatus() {
 function rozpocznijPodlewanie() {
   stan.program = PROGRAM_PODLEWANIE;
   stan.minutyPodlewania = 0;
+  stan.startPodlewaniaMinuty = aktualnyCzasWMinutach();
   stan.ostatniStart = kluczCzasu();
 }
 function rozpocznijNapelnianie() {
   stan.program = PROGRAM_NAPELNIANIE;
   stan.pompa = false;
+  stan.startPodlewaniaMinuty = null;
   stan.napelnianie = !czujnikPelny();
+}
+function zatrzymajProces() {
+  stan.program = 0;
+  stan.pompa = false;
+  stan.napelnianie = false;
+  stan.startPodlewaniaMinuty = null;
 }
 
 function logikaSterownika() {
   synchronizujCzasZSuwakow();
   stan.godzinaPodlewania = godzinaDnia(stan.wybranyEkran);
-  stan.czasPodlewania = czasDnia(stan.wybranyEkran);
+  if (stan.program === 2 && stan.wybranyEkran <= 7) stan.czasPodlewania = czasDnia(stan.wybranyEkran);
   const wilg = Number(wilgotnosc.value);
   if (stan.program === 0) {
     stan.pompa = false;
@@ -305,7 +317,8 @@ function logikaSterownika() {
   if (stan.program === PROGRAM_PODLEWANIE) {
     stan.pompa = true;
     stan.napelnianie = false;
-    if (czujnikPusty()) rozpocznijNapelnianie();
+    stan.minutyPodlewania = Math.min(stan.czasPodlewania, minutyOdStartuPodlewania());
+    if (czujnikPusty() || minutyOdStartuPodlewania() >= stan.czasPodlewania) rozpocznijNapelnianie();
   }
   if (stan.program === PROGRAM_NAPELNIANIE) {
     stan.pompa = false;
@@ -380,10 +393,9 @@ function wcisnijPrzycisk(przycisk) {
 }
 
 function resetSymulatora() {
-  Object.assign(stan, { program: 0, wybranyEkran: 1, trybEdycji: false, edytowanePole: 'godzina', edytowanaCyfra: -1, minutyStartu: [0, 0, 0, 0, 0, 0, 0, 0], godzinyPodlewania: [0, 6, 6, 6, 6, 6, 6, 6], czasyPodlewania: [0, 15, 15, 15, 15, 15, 15, 15], dzienPodlewania: 1, godzinaPodlewania: 6, czasPodlewania: 15, progWilgotnosci: 45, dzien: 1, godzina: 6, minuta: 0, minutyPodlewania: 0, pompa: false, napelnianie: false, ostatniPrzycisk: 'NONE', ostatniStart: '' });
+  Object.assign(stan, { program: 0, wybranyEkran: 1, trybEdycji: false, edytowanePole: 'godzina', edytowanaCyfra: -1, minutyStartu: [0, 0, 0, 0, 0, 0, 0, 0], godzinyPodlewania: [0, 6, 6, 6, 6, 6, 6, 6], czasyPodlewania: [0, 15, 15, 15, 15, 15, 15, 15], dzienPodlewania: 1, godzinaPodlewania: 6, czasPodlewania: 15, progWilgotnosci: 45, dzien: 1, godzina: 6, minuta: 0, minutyPodlewania: 0, pompa: false, napelnianie: false, startPodlewaniaMinuty: null, ostatniPrzycisk: 'NONE', ostatniStart: '' });
   wilgotnosc.value = 35;
   poziomWody.value = 35;
-  czasPodlewania.value = 15;
   dzienAktualny.value = 1;
   godzinaAktualna.value = 6;
   minutaAktualna.value = 0;
@@ -394,13 +406,12 @@ document.querySelectorAll('[data-przycisk]').forEach(btn => btn.addEventListener
 document.getElementById('reset').addEventListener('click', resetSymulatora);
 document.getElementById('stopAwaryjny').addEventListener('click', () => {
   stan.ostatniPrzycisk = 'STOP D2';
-  rozpocznijNapelnianie();
+  zatrzymajProces();
   const stop = document.getElementById('stopAwaryjny');
   stop.classList.add('aktywny');
   setTimeout(() => stop.classList.remove('aktywny'), 160);
   logikaSterownika();
 });
-czasPodlewania.addEventListener('input', () => { if (stan.wybranyEkran <= 7) stan.czasyPodlewania[stan.wybranyEkran] = Number(czasPodlewania.value); logikaSterownika(); });
 [wilgotnosc, poziomWody, dzienAktualny, godzinaAktualna, minutaAktualna].forEach(suwak => suwak.addEventListener('input', logikaSterownika));
 window.addEventListener('keydown', event => {
   const mapaKlawiszy = { ArrowUp: 'UP', ArrowDown: 'DOWN', ArrowLeft: 'LEFT', ArrowRight: 'RIGHT', Enter: 'SELECT' };
