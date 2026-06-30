@@ -9,6 +9,7 @@ const int pin_poziom_pusty=A1;            //wejście czujnika pływakowego PUSTY
 const int pin_poziom_pelny=A3;            //wejście czujnika pływakowego PEŁNY (użyte jako cyfrowe)
 const int pin_wilgotnosc=A4;       //wejście analogowe czujnika wilgotności gleby M335 (0-3V)
 const float V0=5.000;              //wartość napięcia odniesienia ADC arduino (Volty)
+const char* dni_tygodnia[] = {"", "PN", "WT", "SR", "CZW", "PT", "SB", "ND"}; //skróty dni tygodnia
 //-----------------------------------------------------------
 
 //------------zmienne programu-------------------------------
@@ -81,7 +82,7 @@ void setup(){
 void pokaz_status(){
   if(millis()-czas_LCD>250){
     czas_LCD=millis();
-    lcd.setCursor(0,1);lcd.print("D");lcd.print(aktualny_dzien);lcd.print(" ");
+    lcd.setCursor(0,1);lcd.print(dni_tygodnia[aktualny_dzien]);lcd.print(" ");
     if(aktualna_godzina<10) lcd.print("0");lcd.print(aktualna_godzina);lcd.print(":");
     if(aktualna_minuta<10) lcd.print("0");lcd.print(aktualna_minuta);
     lcd.print(" W=");if(pomiar_wilgotnosci<10) lcd.print(" ");lcd.print(pomiar_wilgotnosci);lcd.write(byte(0));lcd.print(" ");
@@ -97,7 +98,7 @@ void loop(){
 //----------poniżej obsługa programów sterownika---------------
   if(program==0){   digitalWrite(pin_przekaznik_podlewania, LOW);
                     digitalWrite(pin_przekaznik_napelniania, LOW);
-                    lcd.setCursor(0,0);lcd.print("AUTO D");lcd.print(dzien_podlewania);lcd.print(" G");
+                    lcd.setCursor(0,0);lcd.print("AUTO ");lcd.print(dni_tygodnia[dzien_podlewania]);lcd.print(" G");
                     if(godzina_podlewania<10) lcd.print("0");lcd.print(godzina_podlewania);lcd.print(" T");lcd.print(czas_podlewania_min);lcd.print(" ");
                     if(aktualny_dzien==dzien_podlewania && aktualna_godzina==godzina_podlewania && aktualna_minuta==0 && pomiar_wilgotnosci<prog_wilgotnosci && digitalRead(pin_poziom_pusty)==HIGH && (ostatni_start_dzien!=aktualny_dzien || ostatni_start_godzina!=aktualna_godzina || ostatni_start_minuta!=aktualna_minuta)){
                       lcd.clear();czas_startu_podlewania=millis();ostatni_start_dzien=aktualny_dzien;ostatni_start_godzina=aktualna_godzina;ostatni_start_minuta=aktualna_minuta;program=1;
@@ -110,7 +111,7 @@ void loop(){
                       digitalWrite(pin_przekaznik_podlewania, LOW);lcd.clear();program=6;
                     }
                  }
-  if(program==2){   lcd.setCursor(0,0);lcd.print("Dzien podlew: ");lcd.print(dzien_podlewania);lcd.print(" "); }
+  if(program==2){   lcd.setCursor(0,0);lcd.print("Dzien podlew: ");lcd.print(dni_tygodnia[dzien_podlewania]);lcd.print(" "); }
   if(program==3){   lcd.setCursor(0,0);lcd.print("Godz podlew: ");if(godzina_podlewania<10) lcd.print("0");lcd.print(godzina_podlewania);lcd.print(" "); }
   if(program==4){   lcd.setCursor(0,0);lcd.print("Czas podlew: ");lcd.print(czas_podlewania_min);lcd.print("m "); }
   if(program==5){   lcd.setCursor(0,0);lcd.print("Prog wilg: ");lcd.print(prog_wilgotnosci);lcd.write(byte(0));lcd.print("  "); }
@@ -118,7 +119,7 @@ void loop(){
                     if(digitalRead(pin_poziom_pelny)==HIGH){digitalWrite(pin_przekaznik_napelniania, HIGH);}
                     else{digitalWrite(pin_przekaznik_napelniania, LOW);lcd.clear();program=0;}
                  }
-  if(program==7){   lcd.setCursor(0,0);lcd.print("Aktualny dzien:");lcd.print(aktualny_dzien);lcd.print(" "); }
+  if(program==7){   lcd.setCursor(0,0);lcd.print("Aktualny dzien:");lcd.print(dni_tygodnia[aktualny_dzien]);lcd.print(" "); }
   if(program==8){   lcd.setCursor(0,0);lcd.print("Aktualna godz:");if(aktualna_godzina<10) lcd.print("0");lcd.print(aktualna_godzina);lcd.print(" "); }
   if(program==9){   lcd.setCursor(0,0);lcd.print("Aktualna min: ");if(aktualna_minuta<10) lcd.print("0");lcd.print(aktualna_minuta);lcd.print(" "); }
 //----------koniec obsługi programów sterownika-----------------

@@ -69,6 +69,7 @@ const wilgotnosc = document.getElementById('wilgotnosc');
 const poziomWody = document.getElementById('poziomWody');
 const czasPodlewania = document.getElementById('czasPodlewania');
 const wartosciAdc = { RIGHT: 0, UP: 144, DOWN: 329, LEFT: 504, SELECT: 741, NONE: 1023, 'STOP D2': 'D2' };
+const skrotyDni = ['', 'PN', 'WT', 'SR', 'CZW', 'PT', 'SB', 'ND'];
 const dzienAktualny = document.getElementById('dzienAktualny');
 const godzinaAktualna = document.getElementById('godzinaAktualna');
 const minutaAktualna = document.getElementById('minutaAktualna');
@@ -94,6 +95,7 @@ const stan = {
 };
 
 function dwa(liczba) { return String(liczba).padStart(2, '0'); }
+function dzienSkrot(dzien) { return skrotyDni[Number(dzien)] || `D${dzien}`; }
 function lcdLinia(tekst) { return String(tekst).padEnd(16, ' ').slice(0, 16); }
 function aktualnyPoziomWody() { return Number(poziomWody.value); }
 function czujnikPelny() { return aktualnyPoziomWody() >= 100; }
@@ -110,7 +112,7 @@ function odswiezOpisySuwakow() {
   document.getElementById('opisWilgotnosci').textContent = `${wilgotnosc.value}%`;
   document.getElementById('opisPoziomuWody').textContent = `${poziomWody.value}%`;
   document.getElementById('opisCzasuPodlewania').textContent = `${stan.czasPodlewania} min`;
-  document.getElementById('opisDniaAktualnego').textContent = `D${dzienAktualny.value}`;
+  document.getElementById('opisDniaAktualnego').textContent = dzienSkrot(dzienAktualny.value);
   document.getElementById('opisGodzinyAktualnej').textContent = dwa(godzinaAktualna.value);
   document.getElementById('opisMinutyAktualnej').textContent = dwa(minutaAktualna.value);
 }
@@ -123,14 +125,14 @@ function drukuj(wiersz0, wiersz1) {
 
 function wyswietlProgram() {
   const wilg = Number(wilgotnosc.value);
-  if (stan.program === 0) drukuj(`AUTO D${stan.dzienPodlewania} G${dwa(stan.godzinaPodlewania)}`, `W${wilg}% T${stan.czasPodlewania}m`);
+  if (stan.program === 0) drukuj(`AUTO ${dzienSkrot(stan.dzienPodlewania)} G${dwa(stan.godzinaPodlewania)}`, `W${wilg}% T${stan.czasPodlewania}m`);
   if (stan.program === PROGRAM_PODLEWANIE) drukuj('Podlewanie', `${stan.minutyPodlewania}/${stan.czasPodlewania}m STOP D2`);
-  if (stan.program === 2) drukuj('Dzien podlew:', `D${stan.dzienPodlewania}  UP/DOWN`);
+  if (stan.program === 2) drukuj('Dzien podlew:', `${dzienSkrot(stan.dzienPodlewania)}  UP/DOWN`);
   if (stan.program === 3) drukuj('Godz podlew:', `${dwa(stan.godzinaPodlewania)}:00 UP/DOWN`);
   if (stan.program === 4) drukuj('Czas podlew:', `${stan.czasPodlewania} min UP/DOWN`);
   if (stan.program === 5) drukuj('Prog wilg:', `${stan.progWilgotnosci}%  UP/DOWN`);
   if (stan.program === PROGRAM_NAPELNIANIE) drukuj('Napelnianie', czujnikPelny() ? 'Zbiornik pelny' : 'Przekaznik A2 ON');
-  if (stan.program === 7) drukuj('Aktualny dzien:', `D${stan.dzien}  UP/DOWN`);
+  if (stan.program === 7) drukuj('Aktualny dzien:', `${dzienSkrot(stan.dzien)}  UP/DOWN`);
   if (stan.program === 8) drukuj('Aktualna godz:', `${dwa(stan.godzina)}:${dwa(stan.minuta)}`);
   if (stan.program === 9) drukuj('Aktualna min:', `${dwa(stan.godzina)}:${dwa(stan.minuta)}`);
 }
@@ -149,7 +151,7 @@ function aktualizujStatus() {
   document.querySelector('.plywak-pusty').classList.toggle('alarm', czujnikPusty());
   document.getElementById('woda').style.height = `${poziomWody.value}%`;
   document.getElementById('wodaOpis').textContent = `${poziomWody.value}%`;
-  document.getElementById('stanCzasu').textContent = `D${stan.dzien} ${dwa(stan.godzina)}:${dwa(stan.minuta)}`;
+  document.getElementById('stanCzasu').textContent = `${dzienSkrot(stan.dzien)} ${dwa(stan.godzina)}:${dwa(stan.minuta)}`;
   odswiezOpisySuwakow();
 }
 
