@@ -87,10 +87,8 @@ const PROGRAM_PODLEWANIE = 1;
 const PROGRAM_NAPELNIANIE = 6;
 const PIERWSZY_EKRAN_KONFIG = 2;
 const OSTATNI_EKRAN_KONFIG = 9;
-let ostatniTickZegara = Date.now();
-let akumulatorZegaraMs = 0;
-const MINUTA_SYMULACJI_MS = 1000;
-const OKRES_ZEGARA_MS = 250;
+let timerZegara = null;
+const BAZOWY_OKRES_MINUTY_MS = 1000;
 const stan = {
   program: 0,
   wybranyEkran: 1,
@@ -438,8 +436,7 @@ function resetSymulatora() {
   dzienAktualny.value = 1;
   aktualnyCzas.value = 360;
   mnoznikCzasu.value = 1;
-  ostatniTickZegara = Date.now();
-  akumulatorZegaraMs = 0;
+  zaplanujZegar();
   logikaSterownika();
 }
 
@@ -447,11 +444,10 @@ document.querySelectorAll('[data-przycisk]').forEach(btn => btn.addEventListener
 document.getElementById('reset').addEventListener('click', resetSymulatora);
 przelaczCzas.addEventListener('click', () => {
   stan.zegarDziala = !stan.zegarDziala;
-  ostatniTickZegara = Date.now();
-  akumulatorZegaraMs = 0;
+  zaplanujZegar();
   logikaSterownika();
 });
-mnoznikCzasu.addEventListener('change', logikaSterownika);
+mnoznikCzasu.addEventListener('change', () => { zaplanujZegar(); logikaSterownika(); });
 document.getElementById('stopAwaryjny').addEventListener('click', () => {
   stan.ostatniPrzycisk = 'STOP D2';
   zatrzymajProces();
@@ -468,22 +464,19 @@ window.addEventListener('keydown', event => {
   if (event.key === ' ') {
     event.preventDefault();
     stan.zegarDziala = !stan.zegarDziala;
-    ostatniTickZegara = Date.now();
-    akumulatorZegaraMs = 0;
+    zaplanujZegar();
     logikaSterownika();
   }
 });
-setInterval(() => {
-  const teraz = Date.now();
-  if (!stan.zegarDziala) {
-    ostatniTickZegara = teraz;
-    return;
-  }
-  akumulatorZegaraMs += (teraz - ostatniTickZegara) * Number(mnoznikCzasu.value);
-  ostatniTickZegara = teraz;
-  if (akumulatorZegaraMs >= MINUTA_SYMULACJI_MS) {
+function zaplanujZegar() {
+  if (timerZegara !== null) clearTimeout(timerZegara);
+  timerZegara = null;
+  if (!stan.zegarDziala) return;
+  const opoznienie = Math.max(16, BAZOWY_OKRES_MINUTY_MS / Number(mnoznikCzasu.value));
+  timerZegara = setTimeout(() => {
     przesunCzasSymulacji(1);
-    akumulatorZegaraMs -= MINUTA_SYMULACJI_MS;
-  }
-}, OKRES_ZEGARA_MS);
+    zaplanujZegar();
+  }, opoznienie);
+}
+
 resetSymulatora();
