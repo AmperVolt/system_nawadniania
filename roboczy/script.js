@@ -125,7 +125,7 @@ function kolejnaCyfra(cyfra, zmiana, maksimum) {
 }
 function ustawCyfreUstawien(dzien, indeks, zmiana) {
   const cyfry = cyfryUstawien(dzien).split('').map(Number);
-  const maksima = [3, 9, 5, 9, 1, 9, 9, 9];
+  const maksima = [2, 9, 5, 9, 1, 9, 9, 9];
   cyfry[indeks] = kolejnaCyfra(cyfry[indeks], zmiana, maksima[indeks]);
   stan.godzinyPodlewania[dzien] = Number(`${cyfry[0]}${cyfry[1]}`);
   stan.minutyStartu[dzien] = Number(`${cyfry[2]}${cyfry[3]}`);
@@ -138,6 +138,17 @@ function walidujUstawieniaDnia(dzien) {
 }
 function walidujProgWilgotnosci() {
   stan.progWilgotnosci = Math.max(0, Math.min(100, stan.progWilgotnosci));
+}
+function grupaCyfry(indeks) {
+  if (indeks <= 1) return 'godzina';
+  if (indeks <= 3) return 'minuta';
+  return 'czas';
+}
+function przesunEdytowanaCyfre(kierunek) {
+  const poprzednia = stan.edytowanaCyfra;
+  const nastepna = kierunek > 0 ? (poprzednia >= 7 ? 0 : poprzednia + 1) : (poprzednia <= 0 ? 7 : poprzednia - 1);
+  if (stan.wybranyEkran <= 7 && grupaCyfry(poprzednia) !== grupaCyfry(nastepna)) walidujUstawieniaDnia(stan.wybranyEkran);
+  stan.edytowanaCyfra = nastepna;
 }
 function liniaUstawienDnia(dzien) {
   const cyfry = cyfryUstawien(dzien).split('');
@@ -275,8 +286,8 @@ function wcisnijPrzycisk(przycisk) {
       stan.edytowanaCyfra = -1;
     }
   }
-  if (przycisk === 'RIGHT' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran <= 7) stan.edytowanaCyfra = stan.edytowanaCyfra >= 7 ? 0 : stan.edytowanaCyfra + 1;
-  if (przycisk === 'LEFT' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran <= 7) stan.edytowanaCyfra = stan.edytowanaCyfra <= 0 ? 7 : stan.edytowanaCyfra - 1;
+  if (przycisk === 'RIGHT' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran <= 7) przesunEdytowanaCyfre(1);
+  if (przycisk === 'LEFT' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran <= 7) przesunEdytowanaCyfre(-1);
   if (przycisk === 'RIGHT' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran === 8) stan.edytowanaCyfra = stan.edytowanaCyfra >= 2 ? 0 : stan.edytowanaCyfra + 1;
   if (przycisk === 'LEFT' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran === 8) stan.edytowanaCyfra = stan.edytowanaCyfra <= 0 ? 2 : stan.edytowanaCyfra - 1;
   if (przycisk === 'UP' && stan.program === 2 && !stan.trybEdycji) stan.wybranyEkran = stan.wybranyEkran >= 8 ? 1 : stan.wybranyEkran + 1;

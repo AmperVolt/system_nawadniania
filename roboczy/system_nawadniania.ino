@@ -81,7 +81,7 @@ void ustaw_cyfre_harmonogramu(int dzien, int indeks, int zmiana){
   int m=minuta_startu[dzien];
   int t=czas_podlewania_dnia[dzien];
   int cyfry[8]={h/10,h%10,m/10,m%10,(t/1000)%10,(t/100)%10,(t/10)%10,t%10};
-  int maksima[8]={3,9,5,9,1,9,9,9};
+  int maksima[8]={2,9,5,9,1,9,9,9};
   cyfry[indeks]=kolejna_cyfra(cyfry[indeks],zmiana,maksima[indeks]);
   godzina_podlewania[dzien]=cyfry[0]*10+cyfry[1];
   minuta_startu[dzien]=cyfry[2]*10+cyfry[3];
@@ -98,6 +98,21 @@ void waliduj_ustawienia_dnia(int dzien){
 void waliduj_prog_wilgotnosci(){
   if(prog_wilgotnosci>100) prog_wilgotnosci=100;
   if(prog_wilgotnosci<0) prog_wilgotnosci=0;
+}
+
+int grupa_cyfry(int indeks){
+  if(indeks<=1) return 0;
+  if(indeks<=3) return 1;
+  return 2;
+}
+
+void przesun_edytowana_cyfre(int kierunek){
+  int poprzednia=edytowana_cyfra;
+  int nastepna;
+  if(kierunek>0){nastepna=poprzednia>=7 ? 0 : poprzednia+1;}
+  else{nastepna=poprzednia<=0 ? 7 : poprzednia-1;}
+  if(wybrany_ekran<=7 && grupa_cyfry(poprzednia)!=grupa_cyfry(nastepna)) waliduj_ustawienia_dnia(wybrany_ekran);
+  edytowana_cyfra=nastepna;
 }
 
 void ustaw_cyfre_progu(int indeks, int zmiana){
@@ -193,8 +208,8 @@ void loop(){
 
 //------------obsługa przycisków z arduino LCD shield: -----------------------------------
     adc_0 = analogRead(0);                                              //odczyt ADC z wejścia przycisków A0
-    if (adc_0 < 50 && millis()-czas_DS>250)  {czas_DS=millis();lcd.clear();if(program==2 && tryb_edycji && wybrany_ekran<=7){edytowana_cyfra++;if(edytowana_cyfra>7) edytowana_cyfra=0;}else if(program==2 && tryb_edycji && wybrany_ekran==8){edytowana_cyfra++;if(edytowana_cyfra>2) edytowana_cyfra=0;}} //RIGHT - następna cyfra
-    if (adc_0 >= 450 && adc_0 < 650 && millis()-czas_DS>250)  {czas_DS=millis();lcd.clear();if(program==2 && tryb_edycji && wybrany_ekran<=7){edytowana_cyfra--;if(edytowana_cyfra<0) edytowana_cyfra=7;}else if(program==2 && tryb_edycji && wybrany_ekran==8){edytowana_cyfra--;if(edytowana_cyfra<0) edytowana_cyfra=2;}} //LEFT - poprzednia cyfra
+    if (adc_0 < 50 && millis()-czas_DS>250)  {czas_DS=millis();lcd.clear();if(program==2 && tryb_edycji && wybrany_ekran<=7){przesun_edytowana_cyfre(1);}else if(program==2 && tryb_edycji && wybrany_ekran==8){edytowana_cyfra++;if(edytowana_cyfra>2) edytowana_cyfra=0;}} //RIGHT - następna cyfra
+    if (adc_0 >= 450 && adc_0 < 650 && millis()-czas_DS>250)  {czas_DS=millis();lcd.clear();if(program==2 && tryb_edycji && wybrany_ekran<=7){przesun_edytowana_cyfre(-1);}else if(program==2 && tryb_edycji && wybrany_ekran==8){edytowana_cyfra--;if(edytowana_cyfra<0) edytowana_cyfra=2;}} //LEFT - poprzednia cyfra
     if (adc_0 >= 50 && adc_0 < 250 && millis()-czas_DS>200)  {
       czas_DS=millis();
       if(program==2 && !tryb_edycji){wybrany_ekran++;if(wybrany_ekran>8) wybrany_ekran=1;}
