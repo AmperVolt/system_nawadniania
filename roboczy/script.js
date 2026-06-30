@@ -80,6 +80,11 @@ const PIERWSZY_EKRAN_KONFIG = 2;
 const OSTATNI_EKRAN_KONFIG = 9;
 const stan = {
   program: 0,
+  wybranyEkran: 1,
+  trybEdycji: false,
+  edytowanePole: 'godzina',
+  godzinyPodlewania: [0, 6, 6, 6, 6, 6, 6, 6],
+  czasyPodlewania: [0, 15, 15, 15, 15, 15, 15, 15],
   dzienPodlewania: 1,
   godzinaPodlewania: 6,
   czasPodlewania: 15,
@@ -102,6 +107,9 @@ function czujnikPelny() { return aktualnyPoziomWody() >= 100; }
 function czujnikPusty() { return aktualnyPoziomWody() <= 0; }
 function opisPlywaka(stanPlywaka) { return stanPlywaka ? 'ZAŁ.' : 'ROZŁ.'; }
 function kluczCzasu() { return `D${stan.dzien}-${stan.godzina}-${stan.minuta}`; }
+function godzinaDnia(dzien) { return stan.godzinyPodlewania[Number(dzien)] || 0; }
+function czasDnia(dzien) { return stan.czasyPodlewania[Number(dzien)] || 1; }
+function wartoscPola(tekst, aktywne) { return aktywne && stan.trybEdycji ? `[${tekst}]` : tekst; }
 function synchronizujCzasZSuwakow() {
   stan.dzien = Number(dzienAktualny.value);
   stan.godzina = Number(godzinaAktualna.value);
@@ -111,7 +119,8 @@ function ustawPoziomWody(wartosc) { poziomWody.value = Math.max(0, Math.min(100,
 function odswiezOpisySuwakow() {
   document.getElementById('opisWilgotnosci').textContent = `${wilgotnosc.value}%`;
   document.getElementById('opisPoziomuWody').textContent = `${poziomWody.value}%`;
-  document.getElementById('opisCzasuPodlewania').textContent = `${stan.czasPodlewania} min`;
+  if (stan.wybranyEkran <= 7) czasPodlewania.value = czasDnia(stan.wybranyEkran);
+  document.getElementById('opisCzasuPodlewania').textContent = `${czasPodlewania.value} min`;
   document.getElementById('opisDniaAktualnego').textContent = dzienSkrot(dzienAktualny.value);
   document.getElementById('opisGodzinyAktualnej').textContent = dwa(godzinaAktualna.value);
   document.getElementById('opisMinutyAktualnej').textContent = dwa(minutaAktualna.value);
@@ -125,12 +134,14 @@ function drukuj(wiersz0, wiersz1) {
 
 function wyswietlProgram() {
   const wilg = Number(wilgotnosc.value);
-  if (stan.program === 0) drukuj(`AUTO ${dzienSkrot(stan.dzienPodlewania)} G${dwa(stan.godzinaPodlewania)}`, `W${wilg}% T${stan.czasPodlewania}m`);
+  if (stan.program === 0) drukuj(`AUTO ${dzienSkrot(stan.dzien)} G${dwa(godzinaDnia(stan.dzien))}`, `W${wilg}% T${czasDnia(stan.dzien)}m`);
   if (stan.program === PROGRAM_PODLEWANIE) drukuj('Podlewanie', `${stan.minutyPodlewania}/${stan.czasPodlewania}m STOP D2`);
-  if (stan.program === 2) drukuj(`Ustawienia: ${dzienSkrot(stan.dzienPodlewania)}`, `${dwa(stan.godzinaPodlewania)}:00 / ${stan.czasPodlewania}min`);
-  if (stan.program === 3) drukuj(`Start ${dzienSkrot(stan.dzienPodlewania)}`, `${dwa(stan.godzinaPodlewania)}:00  UP/DOWN`);
-  if (stan.program === 4) drukuj(`Czas ${dzienSkrot(stan.dzienPodlewania)}`, `${stan.czasPodlewania}min UP/DOWN`);
-  if (stan.program === 5) drukuj('Prog wilg:', `${stan.progWilgotnosci}%  UP/DOWN`);
+  if (stan.program === 2 && stan.wybranyEkran <= 7) {
+    const godzina = wartoscPola(dwa(godzinaDnia(stan.wybranyEkran)), stan.edytowanePole === 'godzina');
+    const czas = wartoscPola(String(czasDnia(stan.wybranyEkran)), stan.edytowanePole === 'czas');
+    drukuj(`Ustawienia: ${dzienSkrot(stan.wybranyEkran)}`, `${godzina}:00 / ${czas}min`);
+  }
+  if (stan.program === 2 && stan.wybranyEkran === 8) drukuj('Prog zalacz.:', `${wartoscPola(String(stan.progWilgotnosci), true)}% wilg.`);
   if (stan.program === PROGRAM_NAPELNIANIE) drukuj('Napelnianie', czujnikPelny() ? 'Zbiornik pelny' : 'Przekaznik A2 ON');
   if (stan.program === 7) drukuj('Aktualny dzien:', `${dzienSkrot(stan.dzien)}  UP/DOWN`);
   if (stan.program === 8) drukuj('Aktualna godz:', `${dwa(stan.godzina)}:${dwa(stan.minuta)}`);
@@ -168,13 +179,17 @@ function rozpocznijNapelnianie() {
 
 function logikaSterownika() {
   synchronizujCzasZSuwakow();
-  stan.czasPodlewania = Number(czasPodlewania.value);
+  stan.godzinaPodlewania = godzinaDnia(stan.wybranyEkran);
+  stan.czasPodlewania = czasDnia(stan.wybranyEkran);
   const wilg = Number(wilgotnosc.value);
   if (stan.program === 0) {
     stan.pompa = false;
     stan.napelnianie = false;
-    const harmonogram = stan.dzien === stan.dzienPodlewania && stan.godzina === stan.godzinaPodlewania && stan.minuta === 0;
-    if (harmonogram && stan.ostatniStart !== kluczCzasu() && wilg < stan.progWilgotnosci && !czujnikPusty()) rozpocznijPodlewanie();
+    const harmonogram = stan.godzina === godzinaDnia(stan.dzien) && stan.minuta === 0;
+    if (harmonogram && stan.ostatniStart !== kluczCzasu() && wilg < stan.progWilgotnosci && !czujnikPusty()) {
+      stan.czasPodlewania = czasDnia(stan.dzien);
+      rozpocznijPodlewanie();
+    }
   }
   if (stan.program === PROGRAM_PODLEWANIE) {
     stan.pompa = true;
@@ -214,22 +229,25 @@ function wcisnijPrzycisk(przycisk) {
     setTimeout(() => btn.classList.remove('aktywny'), 140);
   }
   if (przycisk === 'SELECT') {
-    if (stan.program === 0) stan.program = PIERWSZY_EKRAN_KONFIG;
-    else if (stan.program === 2 && stan.dzienPodlewania < 7) stan.dzienPodlewania += 1;
-    else stan.program = 0;
+    if (stan.program === 0) {
+      stan.program = PIERWSZY_EKRAN_KONFIG;
+      stan.wybranyEkran = 1;
+      stan.trybEdycji = false;
+      stan.edytowanePole = 'godzina';
+    } else if (stan.program === 2) {
+      stan.trybEdycji = !stan.trybEdycji;
+    }
   }
-  if (przycisk === 'RIGHT' && stan.program >= PIERWSZY_EKRAN_KONFIG && stan.program <= OSTATNI_EKRAN_KONFIG) {
-    stan.program += 1;
-    if (stan.program > OSTATNI_EKRAN_KONFIG) stan.program = PIERWSZY_EKRAN_KONFIG;
-  }
-  if (przycisk === 'UP' && stan.program === 2 && stan.dzienPodlewania < 7) stan.dzienPodlewania += 1;
-  if (przycisk === 'DOWN' && stan.program === 2 && stan.dzienPodlewania > 1) stan.dzienPodlewania -= 1;
-  if (przycisk === 'UP' && stan.program === 3 && stan.godzinaPodlewania < 23) stan.godzinaPodlewania += 1;
-  if (przycisk === 'DOWN' && stan.program === 3 && stan.godzinaPodlewania > 0) stan.godzinaPodlewania -= 1;
-  if (przycisk === 'UP' && stan.program === 4 && stan.czasPodlewania < 999) czasPodlewania.value = stan.czasPodlewania + 1;
-  if (przycisk === 'DOWN' && stan.program === 4 && stan.czasPodlewania > 1) czasPodlewania.value = stan.czasPodlewania - 1;
-  if (przycisk === 'UP' && stan.program === 5 && stan.progWilgotnosci < 90) stan.progWilgotnosci += 1;
-  if (przycisk === 'DOWN' && stan.program === 5 && stan.progWilgotnosci > 10) stan.progWilgotnosci -= 1;
+  if (przycisk === 'RIGHT' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran <= 7) stan.edytowanePole = stan.edytowanePole === 'godzina' ? 'czas' : 'godzina';
+  if (przycisk === 'LEFT' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran <= 7) stan.edytowanePole = stan.edytowanePole === 'czas' ? 'godzina' : 'czas';
+  if (przycisk === 'UP' && stan.program === 2 && !stan.trybEdycji) stan.wybranyEkran = stan.wybranyEkran >= 8 ? 1 : stan.wybranyEkran + 1;
+  if (przycisk === 'DOWN' && stan.program === 2 && !stan.trybEdycji) stan.wybranyEkran = stan.wybranyEkran <= 1 ? 8 : stan.wybranyEkran - 1;
+  if (przycisk === 'UP' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran <= 7 && stan.edytowanePole === 'godzina' && godzinaDnia(stan.wybranyEkran) < 23) stan.godzinyPodlewania[stan.wybranyEkran] += 1;
+  if (przycisk === 'DOWN' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran <= 7 && stan.edytowanePole === 'godzina' && godzinaDnia(stan.wybranyEkran) > 0) stan.godzinyPodlewania[stan.wybranyEkran] -= 1;
+  if (przycisk === 'UP' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran <= 7 && stan.edytowanePole === 'czas' && czasDnia(stan.wybranyEkran) < 999) stan.czasyPodlewania[stan.wybranyEkran] += 1;
+  if (przycisk === 'DOWN' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran <= 7 && stan.edytowanePole === 'czas' && czasDnia(stan.wybranyEkran) > 1) stan.czasyPodlewania[stan.wybranyEkran] -= 1;
+  if (przycisk === 'UP' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran === 8 && stan.progWilgotnosci < 90) stan.progWilgotnosci += 1;
+  if (przycisk === 'DOWN' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran === 8 && stan.progWilgotnosci > 10) stan.progWilgotnosci -= 1;
   if (przycisk === 'UP' && stan.program === 7 && stan.dzien < 7) dzienAktualny.value = stan.dzien + 1;
   if (przycisk === 'DOWN' && stan.program === 7 && stan.dzien > 1) dzienAktualny.value = stan.dzien - 1;
   if (przycisk === 'UP' && stan.program === 8 && stan.godzina < 23) godzinaAktualna.value = stan.godzina + 1;
@@ -240,7 +258,7 @@ function wcisnijPrzycisk(przycisk) {
 }
 
 function resetSymulatora() {
-  Object.assign(stan, { program: 0, dzienPodlewania: 1, godzinaPodlewania: 6, czasPodlewania: 15, progWilgotnosci: 45, dzien: 1, godzina: 6, minuta: 0, minutyPodlewania: 0, pompa: false, napelnianie: false, ostatniPrzycisk: 'NONE', ostatniStart: '' });
+  Object.assign(stan, { program: 0, wybranyEkran: 1, trybEdycji: false, edytowanePole: 'godzina', godzinyPodlewania: [0, 6, 6, 6, 6, 6, 6, 6], czasyPodlewania: [0, 15, 15, 15, 15, 15, 15, 15], dzienPodlewania: 1, godzinaPodlewania: 6, czasPodlewania: 15, progWilgotnosci: 45, dzien: 1, godzina: 6, minuta: 0, minutyPodlewania: 0, pompa: false, napelnianie: false, ostatniPrzycisk: 'NONE', ostatniStart: '' });
   wilgotnosc.value = 35;
   poziomWody.value = 35;
   czasPodlewania.value = 15;
@@ -260,7 +278,8 @@ document.getElementById('stopAwaryjny').addEventListener('click', () => {
   setTimeout(() => stop.classList.remove('aktywny'), 160);
   logikaSterownika();
 });
-[wilgotnosc, poziomWody, czasPodlewania, dzienAktualny, godzinaAktualna, minutaAktualna].forEach(suwak => suwak.addEventListener('input', logikaSterownika));
+czasPodlewania.addEventListener('input', () => { if (stan.wybranyEkran <= 7) stan.czasyPodlewania[stan.wybranyEkran] = Number(czasPodlewania.value); logikaSterownika(); });
+[wilgotnosc, poziomWody, dzienAktualny, godzinaAktualna, minutaAktualna].forEach(suwak => suwak.addEventListener('input', logikaSterownika));
 window.addEventListener('keydown', event => {
   const mapaKlawiszy = { ArrowUp: 'UP', ArrowDown: 'DOWN', ArrowLeft: 'LEFT', ArrowRight: 'RIGHT', Enter: 'SELECT' };
   if (event.key in mapaKlawiszy) { event.preventDefault(); wcisnijPrzycisk(mapaKlawiszy[event.key]); }
