@@ -88,7 +88,7 @@ void ustaw_cyfre_harmonogramu(int dzien, int indeks, int zmiana){
   if(indeks>=4) cyfry[indeks]=kolejna_cyfra(cyfry[indeks],zmiana,9);
   h=cyfry[0]*10+cyfry[1]; if(h>23) h=23;
   m=cyfry[2]*10+cyfry[3]; if(m>59) m=59;
-  t=cyfry[4]*1000+cyfry[5]*100+cyfry[6]*10+cyfry[7]; if(t>1440) t=zmiana>0 ? 1 : 1440; if(t<1) t=zmiana<0 ? 1440 : 1;
+  t=cyfry[4]*1000+cyfry[5]*100+cyfry[6]*10+cyfry[7]; if(t>1440) t=1440; if(t<1) t=zmiana<0 ? 1440 : 1;
   godzina_podlewania[dzien]=h; minuta_startu[dzien]=m; czas_podlewania_dnia[dzien]=t;
 }
 

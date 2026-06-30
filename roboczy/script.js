@@ -135,7 +135,7 @@ function ustawCyfreUstawien(dzien, indeks, zmiana) {
   let minuta = Number(`${cyfry[2]}${cyfry[3]}`);
   if (minuta > 59) { minuta = 59; cyfry[2] = 5; cyfry[3] = 9; }
   let czas = Number(`${cyfry[4]}${cyfry[5]}${cyfry[6]}${cyfry[7]}`);
-  if (czas > 1440) czas = zmiana > 0 ? 1 : 1440;
+  if (czas > 1440) czas = 1440;
   if (czas < 1) czas = zmiana < 0 ? 1440 : 1;
   stan.godzinyPodlewania[dzien] = godzina;
   stan.minutyStartu[dzien] = minuta;
