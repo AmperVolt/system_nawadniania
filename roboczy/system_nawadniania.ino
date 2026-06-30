@@ -63,9 +63,8 @@ void drukuj_dzien_tygodnia(int dzien){
 }
 
 void drukuj_cyfre(int cyfra, int indeks){
-  if(tryb_edycji && edytowana_cyfra==indeks) lcd.print("[");
-  lcd.print(cyfra);
-  if(tryb_edycji && edytowana_cyfra==indeks) lcd.print("]");
+  if(tryb_edycji && edytowana_cyfra==indeks && (millis()/500)%2==0) lcd.print(" ");
+  else lcd.print(cyfra);
 }
 
 void ustaw_cyfre_harmonogramu(int dzien, int indeks, int zmiana){
@@ -147,7 +146,7 @@ void loop(){
                     lcd.setCursor(0,1);drukuj_cyfre(cyfry[0],0);drukuj_cyfre(cyfry[1],1);lcd.print(":");drukuj_cyfre(cyfry[2],2);drukuj_cyfre(cyfry[3],3);lcd.print(" / ");drukuj_cyfre(cyfry[4],4);drukuj_cyfre(cyfry[5],5);drukuj_cyfre(cyfry[6],6);lcd.print("min");
                  }
   if(program==2 && wybrany_ekran==8){ lcd.setCursor(0,0);lcd.print("Prog zalacz.: ");
-                    lcd.setCursor(0,1);if(tryb_edycji) lcd.print("[");lcd.print(prog_wilgotnosci);if(tryb_edycji) lcd.print("]");lcd.write(byte(0));lcd.print(" wilg.");
+                    lcd.setCursor(0,1);if(tryb_edycji && (millis()/500)%2==0) lcd.print("  ");else lcd.print(prog_wilgotnosci);lcd.write(byte(0));lcd.print(" wilg.");
                  }
   if(program==5){   lcd.setCursor(0,0);lcd.print("Prog wilg: ");lcd.print(prog_wilgotnosci);lcd.write(byte(0));lcd.print("  "); }
   if(program==6){   digitalWrite(pin_przekaznik_podlewania, LOW);lcd.setCursor(0,0);lcd.print("Napelnianie A2 ");

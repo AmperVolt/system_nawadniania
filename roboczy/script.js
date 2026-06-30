@@ -112,7 +112,8 @@ function kluczCzasu() { return `D${stan.dzien}-${stan.godzina}-${stan.minuta}`; 
 function godzinaDnia(dzien) { return stan.godzinyPodlewania[Number(dzien)] || 0; }
 function minutaDnia(dzien) { return stan.minutyStartu[Number(dzien)] || 0; }
 function czasDnia(dzien) { return stan.czasyPodlewania[Number(dzien)] || 1; }
-function wartoscPola(tekst, aktywne) { return aktywne && stan.trybEdycji ? `[${tekst}]` : tekst; }
+function pokazMigajace() { return Math.floor(Date.now() / 500) % 2 === 0; }
+function wartoscPola(tekst, aktywne) { return aktywne && stan.trybEdycji && !pokazMigajace() ? ' '.repeat(String(tekst).length) : tekst; }
 function cyfryUstawien(dzien) { return `${dwa(godzinaDnia(dzien))}${dwa(minutaDnia(dzien))}${String(czasDnia(dzien)).padStart(3, '0')}`; }
 function ustawCyfreUstawien(dzien, indeks, zmiana) {
   const cyfry = cyfryUstawien(dzien).split('').map(Number);
@@ -126,7 +127,7 @@ function ustawCyfreUstawien(dzien, indeks, zmiana) {
 }
 function liniaUstawienDnia(dzien) {
   const cyfry = cyfryUstawien(dzien).split('');
-  const pokaz = cyfry.map((cyfra, indeks) => (stan.trybEdycji && stan.edytowanaCyfra === indeks ? `[${cyfra}]` : cyfra));
+  const pokaz = cyfry.map((cyfra, indeks) => (stan.trybEdycji && stan.edytowanaCyfra === indeks && !pokazMigajace() ? ' ' : cyfra));
   return `${pokaz[0]}${pokaz[1]}:${pokaz[2]}${pokaz[3]} / ${pokaz[4]}${pokaz[5]}${pokaz[6]}min`;
 }
 function synchronizujCzasZSuwakow() {
@@ -291,4 +292,5 @@ window.addEventListener('keydown', event => {
   if (event.key in mapaKlawiszy) { event.preventDefault(); wcisnijPrzycisk(mapaKlawiszy[event.key]); }
   if (event.key.toLowerCase() === 'r') resetSymulatora();
 });
+setInterval(() => { if (stan.program === 2 && stan.trybEdycji) wyswietlProgram(); }, 500);
 resetSymulatora();
