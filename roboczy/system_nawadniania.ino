@@ -7,7 +7,7 @@ LiquidCrystal lcd(8, 9, 4, 5, 6, 7);  //zdefiniowanie numerów pinów wejściowy
 //--------poniżej stałe konfiguracyjne:----------------------
 const int pin_przekaznik_podlewania=A5;   //wyjście odpowiedzialne za przekaźnik pompy podlewania
 const int pin_przekaznik_napelniania=A2;  //wyjście odpowiedzialne za drugi przekaźnik - napełnianie wody
-const int pin_stop=2;                     //wejście przycisku STOP przerywającego podlewanie
+const int pin_stop=2;                     //wejście przycisku STOP obsługującego podlewanie i napełnianie
 const int pin_poziom_pusty=A1;            //wejście czujnika pływakowego PUSTY (użyte jako cyfrowe)
 const int pin_poziom_pelny=A3;            //wejście czujnika pływakowego PEŁNY (użyte jako cyfrowe)
 const int pin_wilgotnosc=A4;       //wejście analogowe czujnika wilgotności gleby M335 (0-3V)
@@ -296,7 +296,7 @@ void loop(){
                     digitalWrite(pin_przekaznik_podlewania, HIGH);
                     digitalWrite(pin_przekaznik_napelniania, LOW);
                     if(digitalRead(pin_stop)==LOW){
-                      digitalWrite(pin_przekaznik_podlewania, LOW);lcd.clear();program=0;
+                      digitalWrite(pin_przekaznik_podlewania, LOW);lcd.clear();program=6;
                     }
                     else if(digitalRead(pin_poziom_pusty)==LOW || millis()-czas_startu_podlewania>=czas_podlewania_min*60000UL){
                       digitalWrite(pin_przekaznik_podlewania, LOW);lcd.clear();program=6;

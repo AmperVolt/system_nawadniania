@@ -327,6 +327,10 @@ function zatrzymajProces() {
   stan.napelnianie = false;
   stan.startPodlewaniaMinuty = null;
 }
+function obsluzStop() {
+  if (stan.program === PROGRAM_PODLEWANIE) rozpocznijNapelnianie();
+  else zatrzymajProces();
+}
 
 function przesunCzasSymulacji(minuty) {
   const tydzien = 7 * 1440;
@@ -450,7 +454,7 @@ przelaczCzas.addEventListener('click', () => {
 mnoznikCzasu.addEventListener('change', () => { zaplanujZegar(); logikaSterownika(); });
 document.getElementById('stopAwaryjny').addEventListener('click', () => {
   stan.ostatniPrzycisk = 'STOP D2';
-  zatrzymajProces();
+  obsluzStop();
   const stop = document.getElementById('stopAwaryjny');
   stop.classList.add('aktywny');
   setTimeout(() => stop.classList.remove('aktywny'), 160);
