@@ -118,7 +118,7 @@ function godzinaDnia(dzien) { return stan.godzinyPodlewania[Number(dzien)] || 0;
 function minutaDnia(dzien) { return stan.minutyStartu[Number(dzien)] || 0; }
 function czasDnia(dzien) { return stan.czasyPodlewania[Number(dzien)] || 1; }
 function wartoscPola(tekst) { return tekst; }
-function cyfryUstawien(dzien) { return `${dwa(godzinaDnia(dzien))}${dwa(minutaDnia(dzien))}${String(czasDnia(dzien)).padStart(3, '0')}`; }
+function cyfryUstawien(dzien) { return `${dwa(godzinaDnia(dzien))}${dwa(minutaDnia(dzien))}${String(czasDnia(dzien)).padStart(4, '0')}`; }
 function kolejnaCyfra(cyfra, zmiana, maksimum) {
   if (zmiana > 0) return cyfra >= maksimum ? 0 : cyfra + 1;
   return cyfra <= 0 ? maksimum : cyfra - 1;
@@ -134,20 +134,29 @@ function ustawCyfreUstawien(dzien, indeks, zmiana) {
   if (godzina > 23) { godzina = 23; cyfry[0] = 2; cyfry[1] = 3; }
   let minuta = Number(`${cyfry[2]}${cyfry[3]}`);
   if (minuta > 59) { minuta = 59; cyfry[2] = 5; cyfry[3] = 9; }
-  let czas = Number(`${cyfry[4]}${cyfry[5]}${cyfry[6]}`);
-  if (czas < 1) czas = zmiana < 0 ? 999 : 1;
+  let czas = Number(`${cyfry[4]}${cyfry[5]}${cyfry[6]}${cyfry[7]}`);
+  if (czas > 1440) czas = zmiana > 0 ? 1 : 1440;
+  if (czas < 1) czas = zmiana < 0 ? 1440 : 1;
   stan.godzinyPodlewania[dzien] = godzina;
   stan.minutyStartu[dzien] = minuta;
   stan.czasyPodlewania[dzien] = czas;
 }
 function liniaUstawienDnia(dzien) {
   const cyfry = cyfryUstawien(dzien).split('');
-  return `${cyfry[0]}${cyfry[1]}:${cyfry[2]}${cyfry[3]} / ${cyfry[4]}${cyfry[5]}${cyfry[6]}min`;
+  return `${cyfry[0]}${cyfry[1]}:${cyfry[2]}${cyfry[3]} / ${cyfry[4]}${cyfry[5]}${cyfry[6]}${cyfry[7]} min`;
+}
+function cyfryProgu() { return String(stan.progWilgotnosci).padStart(3, '0'); }
+function ustawCyfreProgu(indeks, zmiana) {
+  const cyfry = cyfryProgu().split('').map(Number);
+  cyfry[indeks] = kolejnaCyfra(cyfry[indeks], zmiana, 9);
+  let prog = Number(`${cyfry[0]}${cyfry[1]}${cyfry[2]}`);
+  if (prog > 100) prog = zmiana > 0 ? 0 : 100;
+  stan.progWilgotnosci = prog;
 }
 function podswietlEdytowanaCyfre() {
   if (!stan.trybEdycji) return;
-  if (stan.wybranyEkran <= 7) lcd.podswietl([0, 1, 3, 4, 8, 9, 10][stan.edytowanaCyfra], 1);
-  if (stan.wybranyEkran === 8) lcd.podswietl(0, 1);
+  if (stan.wybranyEkran <= 7) lcd.podswietl([0, 1, 3, 4, 8, 9, 10, 11][stan.edytowanaCyfra], 1);
+  if (stan.wybranyEkran === 8) lcd.podswietl([0, 1, 2][stan.edytowanaCyfra], 1);
 }
 function synchronizujCzasZSuwakow() {
   stan.dzien = Number(dzienAktualny.value);
@@ -176,7 +185,7 @@ function wyswietlProgram() {
   if (stan.program === 0) drukuj(`AUTO ${dzienSkrot(stan.dzien)} G${dwa(godzinaDnia(stan.dzien))}`, `W${wilg}% T${czasDnia(stan.dzien)}m`);
   if (stan.program === PROGRAM_PODLEWANIE) drukuj('Podlewanie', `${stan.minutyPodlewania}/${stan.czasPodlewania}m STOP D2`);
   if (stan.program === 2 && stan.wybranyEkran <= 7) { drukuj(`Ustawienia: ${dzienSkrot(stan.wybranyEkran)}`, liniaUstawienDnia(stan.wybranyEkran)); podswietlEdytowanaCyfre(); }
-  if (stan.program === 2 && stan.wybranyEkran === 8) { drukuj('Prog zalacz.:', `${wartoscPola(String(stan.progWilgotnosci))}% wilg.`); podswietlEdytowanaCyfre(); }
+  if (stan.program === 2 && stan.wybranyEkran === 8) { drukuj('Prog zalacz.:', `${cyfryProgu()}% wilg.`); podswietlEdytowanaCyfre(); }
   if (stan.program === PROGRAM_NAPELNIANIE) drukuj('Napelnianie', czujnikPelny() ? 'Zbiornik pelny' : 'Przekaznik A2 ON');
   if (stan.program === 7) drukuj('Aktualny dzien:', `${dzienSkrot(stan.dzien)}  UP/DOWN`);
   if (stan.program === 8) drukuj('Aktualna godz:', `${dwa(stan.godzina)}:${dwa(stan.minuta)}`);
@@ -266,14 +275,16 @@ function wcisnijPrzycisk(przycisk) {
       stan.edytowanaCyfra = -1;
     }
   }
-  if (przycisk === 'RIGHT' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran <= 7) stan.edytowanaCyfra = stan.edytowanaCyfra >= 6 ? 0 : stan.edytowanaCyfra + 1;
-  if (przycisk === 'LEFT' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran <= 7) stan.edytowanaCyfra = stan.edytowanaCyfra <= 0 ? 6 : stan.edytowanaCyfra - 1;
+  if (przycisk === 'RIGHT' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran <= 7) stan.edytowanaCyfra = stan.edytowanaCyfra >= 7 ? 0 : stan.edytowanaCyfra + 1;
+  if (przycisk === 'LEFT' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran <= 7) stan.edytowanaCyfra = stan.edytowanaCyfra <= 0 ? 7 : stan.edytowanaCyfra - 1;
+  if (przycisk === 'RIGHT' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran === 8) stan.edytowanaCyfra = stan.edytowanaCyfra >= 2 ? 0 : stan.edytowanaCyfra + 1;
+  if (przycisk === 'LEFT' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran === 8) stan.edytowanaCyfra = stan.edytowanaCyfra <= 0 ? 2 : stan.edytowanaCyfra - 1;
   if (przycisk === 'UP' && stan.program === 2 && !stan.trybEdycji) stan.wybranyEkran = stan.wybranyEkran >= 8 ? 1 : stan.wybranyEkran + 1;
   if (przycisk === 'DOWN' && stan.program === 2 && !stan.trybEdycji) stan.wybranyEkran = stan.wybranyEkran <= 1 ? 8 : stan.wybranyEkran - 1;
   if (przycisk === 'UP' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran <= 7) ustawCyfreUstawien(stan.wybranyEkran, stan.edytowanaCyfra, 1);
   if (przycisk === 'DOWN' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran <= 7) ustawCyfreUstawien(stan.wybranyEkran, stan.edytowanaCyfra, -1);
-  if (przycisk === 'UP' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran === 8 && stan.progWilgotnosci < 90) stan.progWilgotnosci += 1;
-  if (przycisk === 'DOWN' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran === 8 && stan.progWilgotnosci > 10) stan.progWilgotnosci -= 1;
+  if (przycisk === 'UP' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran === 8) ustawCyfreProgu(stan.edytowanaCyfra, 1);
+  if (przycisk === 'DOWN' && stan.program === 2 && stan.trybEdycji && stan.wybranyEkran === 8) ustawCyfreProgu(stan.edytowanaCyfra, -1);
   if (przycisk === 'UP' && stan.program === 7 && stan.dzien < 7) dzienAktualny.value = stan.dzien + 1;
   if (przycisk === 'DOWN' && stan.program === 7 && stan.dzien > 1) dzienAktualny.value = stan.dzien - 1;
   if (przycisk === 'UP' && stan.program === 8 && stan.godzina < 23) godzinaAktualna.value = stan.godzina + 1;
