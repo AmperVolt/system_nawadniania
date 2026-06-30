@@ -87,6 +87,10 @@ const PROGRAM_PODLEWANIE = 1;
 const PROGRAM_NAPELNIANIE = 6;
 const PIERWSZY_EKRAN_KONFIG = 2;
 const OSTATNI_EKRAN_KONFIG = 9;
+let ostatniTickZegara = Date.now();
+let akumulatorZegaraMs = 0;
+const MINUTA_SYMULACJI_MS = 60000;
+const OKRES_ZEGARA_MS = 250;
 const stan = {
   program: 0,
   wybranyEkran: 1,
@@ -434,12 +438,19 @@ function resetSymulatora() {
   dzienAktualny.value = 1;
   aktualnyCzas.value = 360;
   mnoznikCzasu.value = 1;
+  ostatniTickZegara = Date.now();
+  akumulatorZegaraMs = 0;
   logikaSterownika();
 }
 
 document.querySelectorAll('[data-przycisk]').forEach(btn => btn.addEventListener('click', () => wcisnijPrzycisk(btn.dataset.przycisk)));
 document.getElementById('reset').addEventListener('click', resetSymulatora);
-przelaczCzas.addEventListener('click', () => { stan.zegarDziala = !stan.zegarDziala; logikaSterownika(); });
+przelaczCzas.addEventListener('click', () => {
+  stan.zegarDziala = !stan.zegarDziala;
+  ostatniTickZegara = Date.now();
+  akumulatorZegaraMs = 0;
+  logikaSterownika();
+});
 mnoznikCzasu.addEventListener('change', logikaSterownika);
 document.getElementById('stopAwaryjny').addEventListener('click', () => {
   stan.ostatniPrzycisk = 'STOP D2';
@@ -454,7 +465,25 @@ window.addEventListener('keydown', event => {
   const mapaKlawiszy = { ArrowUp: 'UP', ArrowDown: 'DOWN', ArrowLeft: 'LEFT', ArrowRight: 'RIGHT', Enter: 'SELECT' };
   if (event.key in mapaKlawiszy) { event.preventDefault(); wcisnijPrzycisk(mapaKlawiszy[event.key]); }
   if (event.key.toLowerCase() === 'r') resetSymulatora();
-  if (event.key === ' ') { event.preventDefault(); stan.zegarDziala = !stan.zegarDziala; logikaSterownika(); }
+  if (event.key === ' ') {
+    event.preventDefault();
+    stan.zegarDziala = !stan.zegarDziala;
+    ostatniTickZegara = Date.now();
+    akumulatorZegaraMs = 0;
+    logikaSterownika();
+  }
 });
-setInterval(() => { if (stan.zegarDziala) przesunCzasSymulacji(Number(mnoznikCzasu.value)); }, 1000);
+setInterval(() => {
+  const teraz = Date.now();
+  if (!stan.zegarDziala) {
+    ostatniTickZegara = teraz;
+    return;
+  }
+  akumulatorZegaraMs += (teraz - ostatniTickZegara) * Number(mnoznikCzasu.value);
+  ostatniTickZegara = teraz;
+  if (akumulatorZegaraMs >= MINUTA_SYMULACJI_MS) {
+    przesunCzasSymulacji(1);
+    akumulatorZegaraMs -= MINUTA_SYMULACJI_MS;
+  }
+}, OKRES_ZEGARA_MS);
 resetSymulatora();
