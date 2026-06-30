@@ -44,8 +44,8 @@
             <div class="linia-statusu"><span>Program sterownika</span><span id="stanProgramu" class="wartosc">AUTO</span></div>
             <div class="linia-statusu"><span>Przekaźnik podlewania</span><span id="stanPompy" class="wartosc">OFF</span></div>
             <div class="linia-statusu"><span>Przekaźnik napełniania A2</span><span id="stanNapelniania" class="wartosc">OFF</span></div>
-            <div class="linia-statusu"><span>Czujnik PEŁNY</span><span id="stanPelny" class="wartosc">ROZŁ.</span></div>
-            <div class="linia-statusu"><span>Czujnik PUSTY</span><span id="stanPusty" class="wartosc">ROZŁ.</span></div>
+            <div class="linia-statusu"><span>Czujnik PEŁNY</span><span id="stanPelny" class="wartosc">0</span></div>
+            <div class="linia-statusu"><span>Czujnik PUSTY</span><span id="stanPusty" class="wartosc">0</span></div>
             <div class="linia-statusu"><span>Czas</span><span id="stanCzasu" class="wartosc">Pon. 06:00</span></div>
             <div class="linia-statusu"><span>Zegar symulacji</span><span id="stanZegara" class="wartosc">PAUZA ×1</span></div>
           </div>
@@ -59,7 +59,7 @@
             <div id="woda"></div>
             <span id="wodaOpis">35%</span>
           </div>
-          <div class="pomoc mala">Jeden suwak poziomu wody służy tylko do ustawienia stanów cyfrowych czujników PEŁNY/PUSTY. Symulator nie przelicza poziomu wody na żaden sygnał analogowy.</div>
+          <div class="pomoc mala">Jeden suwak poziomu wody ustawia stany cyfrowe czujników: przy 100% PEŁNY=1 i PUSTY=1, przy 0% PEŁNY=0 i PUSTY=0, a pomiędzy nimi PEŁNY=0 i PUSTY=1.</div>
 
           <h2>Czas ręczny</h2>
           <label>Aktualny dzień tygodnia <span id="opisDniaAktualnego" class="wartosc-suwaka">Pon.</span><input id="dzienAktualny" type="range" min="1" max="7" value="1"></label>
@@ -69,8 +69,8 @@
             <label>Mnożnik czasu <span id="opisMnoznikaCzasu" class="wartosc-suwaka">×1</span><select id="mnoznikCzasu"><option value="1">×1</option><option value="5">×5</option><option value="15">×15</option><option value="60">×60</option></select></label>
           </div>
           <div class="plywaki" aria-label="Czujniki pływakowe poziomu wody">
-            <div class="plywak plywak-pelny"><span>pływak PEŁNY</span><strong id="opisPelny">ROZŁ.</strong></div>
-            <div class="plywak plywak-pusty"><span>pływak PUSTY</span><strong id="opisPusty">ROZŁ.</strong></div>
+            <div class="plywak plywak-pelny"><span>pływak PEŁNY</span><strong id="opisPelny">0</strong></div>
+            <div class="plywak plywak-pusty"><span>pływak PUSTY</span><strong id="opisPusty">0</strong></div>
           </div>
           <button class="stop-awaryjny" id="stopAwaryjny" type="button">STOP podlewania / napełniania D2</button>
 

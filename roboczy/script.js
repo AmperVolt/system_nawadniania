@@ -125,8 +125,8 @@ function wysrodkuj(tekst) {
 }
 function aktualnyPoziomWody() { return Number(poziomWody.value); }
 function czujnikPelny() { return aktualnyPoziomWody() >= 100; }
-function czujnikPusty() { return aktualnyPoziomWody() <= 0; }
-function opisPlywaka(stanPlywaka) { return stanPlywaka ? 'ZAŁ.' : 'ROZŁ.'; }
+function czujnikPusty() { return aktualnyPoziomWody() > 0; }
+function opisPlywaka(stanPlywaka) { return stanPlywaka ? '1' : '0'; }
 function kluczCzasu() { return `D${stan.dzien}-${stan.godzina}-${stan.minuta}`; }
 function aktualnyCzasWMinutach() { return (stan.dzien - 1) * 1440 + czasNaMinuty(stan.godzina, stan.minuta); }
 function minutyOdStartuPodlewania() {
@@ -299,7 +299,7 @@ function aktualizujStatus() {
   document.getElementById('opisPelny').textContent = opisPlywaka(czujnikPelny());
   document.getElementById('opisPusty').textContent = opisPlywaka(czujnikPusty());
   document.querySelector('.plywak-pelny').classList.toggle('alarm', !czujnikPelny());
-  document.querySelector('.plywak-pusty').classList.toggle('alarm', czujnikPusty());
+  document.querySelector('.plywak-pusty').classList.toggle('alarm', !czujnikPusty());
   document.getElementById('woda').style.height = `${poziomWody.value}%`;
   document.getElementById('wodaOpis').textContent = `${poziomWody.value}%`;
   document.getElementById('stanCzasu').textContent = `${dzienSkrot(stan.dzien)} ${dwa(stan.godzina)}:${dwa(stan.minuta)}`;
@@ -346,7 +346,7 @@ function logikaSterownika() {
     stan.pompa = false;
     stan.napelnianie = false;
     const harmonogram = stan.godzina === godzinaDnia(stan.dzien) && stan.minuta === minutaDnia(stan.dzien);
-    if (harmonogram && stan.ostatniStart !== kluczCzasu() && wilg < stan.progWilgotnosci && !czujnikPusty()) {
+    if (harmonogram && stan.ostatniStart !== kluczCzasu() && wilg < stan.progWilgotnosci && czujnikPusty()) {
       stan.czasPodlewania = czasDnia(stan.dzien);
       rozpocznijPodlewanie();
     }
@@ -355,7 +355,7 @@ function logikaSterownika() {
     stan.pompa = true;
     stan.napelnianie = false;
     stan.minutyPodlewania = Math.min(stan.czasPodlewania, minutyOdStartuPodlewania());
-    if (czujnikPusty() || minutyOdStartuPodlewania() >= stan.czasPodlewania) rozpocznijNapelnianie();
+    if (!czujnikPusty() || minutyOdStartuPodlewania() >= stan.czasPodlewania) rozpocznijNapelnianie();
   }
   if (stan.program === PROGRAM_NAPELNIANIE) {
     stan.pompa = false;
