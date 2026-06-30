@@ -172,7 +172,9 @@ function ustawCyfreProgu(indeks, zmiana) {
   if (prog > 99) prog = zmiana > 0 ? 0 : 99;
   stan.progWilgotnosci = prog;
 }
-function liniaCzasuRtc() { return `${dwa(stan.godzina)}:${dwa(stan.minuta)} / ${dzienSkrot(stan.dzien)}`; }
+function godzinaRtcNaEkran() { return stan.trybEdycji && stan.wybranyEkran === 9 ? godzinaDnia(0) : stan.godzina; }
+function minutaRtcNaEkran() { return stan.trybEdycji && stan.wybranyEkran === 9 ? minutaDnia(0) : stan.minuta; }
+function liniaCzasuRtc() { return `${dwa(godzinaRtcNaEkran())}:${dwa(minutaRtcNaEkran())} / ${dzienSkrot(stan.dzien)}`; }
 function skopiujRtcDoUstawienCzasu() {
   stan.godzinyPodlewania[0] = stan.godzina;
   stan.minutyStartu[0] = stan.minuta;
@@ -184,17 +186,15 @@ function skopiujUstawieniaCzasuDoRtc() {
   synchronizujSuwakiZCzasem();
 }
 function ustawCyfreRtc(indeks, zmiana) {
-  if (indeks <= 3) {
-    skopiujRtcDoUstawienCzasu();
-    ustawCyfreUstawien(0, indeks, zmiana);
-    skopiujUstawieniaCzasuDoRtc();
-  }
+  if (indeks <= 3) ustawCyfreUstawien(0, indeks, zmiana);
   if (indeks === 4) stan.dzien = zmiana > 0 ? (stan.dzien >= 7 ? 1 : stan.dzien + 1) : (stan.dzien <= 1 ? 7 : stan.dzien - 1);
   synchronizujSuwakiZCzasem();
 }
 function walidujCzasRtc() {
-  skopiujRtcDoUstawienCzasu();
   walidujUstawieniaDnia(0);
+}
+function zatwierdzCzasRtc() {
+  walidujCzasRtc();
   skopiujUstawieniaCzasuDoRtc();
 }
 function grupaCyfryRtc(indeks) {
@@ -332,10 +332,11 @@ function wcisnijPrzycisk(przycisk) {
     } else if (!stan.trybEdycji) {
       stan.trybEdycji = true;
       stan.edytowanaCyfra = 0;
+      if (stan.wybranyEkran === 9) skopiujRtcDoUstawienCzasu();
     } else {
       if (stan.wybranyEkran <= 7) walidujUstawieniaDnia(stan.wybranyEkran);
       if (stan.wybranyEkran === 8) walidujProgWilgotnosci();
-      if (stan.wybranyEkran === 9) walidujCzasRtc();
+      if (stan.wybranyEkran === 9) zatwierdzCzasRtc();
       stan.trybEdycji = false;
       stan.edytowanaCyfra = -1;
     }

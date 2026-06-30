@@ -151,17 +151,16 @@ void skopiuj_ustawienia_czasu_do_rtc(){
 }
 
 void ustaw_cyfre_rtc(int indeks, int zmiana){
-  if(indeks<=3){
-    skopiuj_rtc_do_ustawien_czasu();
-    ustaw_cyfre_harmonogramu(0, indeks, zmiana);
-    skopiuj_ustawienia_czasu_do_rtc();
-  }
+  if(indeks<=3) ustaw_cyfre_harmonogramu(0, indeks, zmiana);
   if(indeks==4){aktualny_dzien=zmiana>0 ? (aktualny_dzien>=7 ? 1 : aktualny_dzien+1) : (aktualny_dzien<=1 ? 7 : aktualny_dzien-1);}
 }
 
 void waliduj_czas_rtc(){
-  skopiuj_rtc_do_ustawien_czasu();
   waliduj_ustawienia_dnia(0);
+}
+
+void zatwierdz_czas_rtc(){
+  waliduj_czas_rtc();
   skopiuj_ustawienia_czasu_do_rtc();
 }
 int grupa_cyfry_rtc(int indeks){
@@ -190,11 +189,12 @@ void odczytaj_czas_rtc(){
   if(dzien>=1 && dzien<=7) aktualny_dzien=dzien;
   aktualna_godzina=rtc.getHour(h12, pm);
   aktualna_minuta=rtc.getMinute();
-  waliduj_czas_rtc();
+  if(aktualna_godzina>23) aktualna_godzina=23;
+  if(aktualna_minuta>59) aktualna_minuta=59;
 }
 
 void zapisz_czas_rtc(){
-  waliduj_czas_rtc();
+  zatwierdz_czas_rtc();
   rtc.setDoW(aktualny_dzien);
   rtc.setHour(aktualna_godzina);
   rtc.setMinute(aktualna_minuta);
@@ -275,8 +275,10 @@ void loop(){
                     lcd.setCursor(0,1);if(prog_wilgotnosci<10) lcd.print("0");lcd.print(prog_wilgotnosci);lcd.write(byte(0));lcd.print(" wilg.");if(tryb_edycji){lcd.setCursor(kolumna_cyfry_progu(edytowana_cyfra),1);lcd.blink();}else lcd.noBlink();
                  }
   if(program==2 && wybrany_ekran==9){ lcd.setCursor(0,0);lcd.print("Czas RTC:       ");
-                    lcd.setCursor(0,1);if(aktualna_godzina<10) lcd.print("0");lcd.print(aktualna_godzina);lcd.print(":");if(aktualna_minuta<10) lcd.print("0");lcd.print(aktualna_minuta);lcd.print(" / ");drukuj_dzien_tygodnia(aktualny_dzien);lcd.print("   ");if(tryb_edycji){lcd.setCursor(kolumna_cyfry_rtc(edytowana_cyfra),1);lcd.blink();}else lcd.noBlink();
-                 }
+                    int godzina_rtc_ekran=tryb_edycji ? godzina_podlewania[0] : aktualna_godzina;
+                    int minuta_rtc_ekran=tryb_edycji ? minuta_startu[0] : aktualna_minuta;
+                    lcd.setCursor(0,1);if(godzina_rtc_ekran<10) lcd.print("0");lcd.print(godzina_rtc_ekran);lcd.print(":");if(minuta_rtc_ekran<10) lcd.print("0");lcd.print(minuta_rtc_ekran);lcd.print(" / ");drukuj_dzien_tygodnia(aktualny_dzien);lcd.print("   ");if(tryb_edycji){lcd.setCursor(kolumna_cyfry_rtc(edytowana_cyfra),1);lcd.blink();}else lcd.noBlink();
+                  }
   if(program==5){   lcd.setCursor(0,0);lcd.print("Prog wilg: ");lcd.print(prog_wilgotnosci);lcd.write(byte(0));lcd.print("  "); }
   if(program==6){   digitalWrite(pin_przekaznik_podlewania, LOW);lcd.setCursor(0,0);lcd.print("Napelnianie A2 ");
                     if(digitalRead(pin_poziom_pelny)==HIGH){digitalWrite(pin_przekaznik_napelniania, HIGH);}
@@ -315,7 +317,7 @@ void loop(){
     if (adc_0 >= 650 && adc_0 < 850 && millis()-czas_DS>250)  {
       czas_DS=millis();lcd.clear();
       if(program!=2){program=2;wybrany_ekran=1;tryb_edycji=false;edytowana_cyfra=-1;}
-      else if(!tryb_edycji){tryb_edycji=true;edytowana_cyfra=0;}
+      else if(!tryb_edycji){tryb_edycji=true;edytowana_cyfra=0;if(wybrany_ekran==9) skopiuj_rtc_do_ustawien_czasu();}
       else{if(wybrany_ekran<=7) waliduj_ustawienia_dnia(wybrany_ekran); if(wybrany_ekran==8) waliduj_prog_wilgotnosci(); if(wybrany_ekran==9) zapisz_czas_rtc(); tryb_edycji=false;edytowana_cyfra=-1;}
     } //SELECT - edycja / zatwierdzenie
 //-------------koniec obsługi przycisków z arduino LCD shield---------------------------------
